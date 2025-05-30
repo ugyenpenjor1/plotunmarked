@@ -103,12 +103,12 @@ auc_modavg_plot <- function(model_list, use_detection = TRUE, detection_history 
   print(p)
 
   # Return components
-  return(list(
+  return(invisible(list(
     roc = roc_obj,
     auc = roc_obj$auc,
     auc_ci = roc_obj$ci,
     y_true = y_true,
     predicted = psi,
     plot = p
-  ))
+  )))
 }
