@@ -3,3 +3,4 @@
 export(plot_detection)
 export(plot_modavg_response)
 export(plot_occupancy)
+export(standardise_raster)
