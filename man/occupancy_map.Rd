@@ -12,8 +12,8 @@ occupancy_map(
   plot_ci = FALSE,
   ci_level = 0.95,
   save_plot = FALSE,
-  plot_filename = "occupancy_plot",
-  plot_format = "jpeg"
+  plot_filename = "occupancy_map",
+  plot_format = "png"
 )
 }
 \arguments{
@@ -34,9 +34,9 @@ One of \code{"same"} (default, match input raster class), \code{"terra"}, or \co
 
 \item{save_plot}{Logical; if \code{TRUE}, the plot will be saved to disk.}
 
-\item{plot_filename}{Character; base filename for saving the plot (default \code{"occupancy_plot"}).}
+\item{plot_filename}{Character; base filename for saving the plot (default \code{"occupancy_map"}).}
 
-\item{plot_format}{Character; format to save the plot (e.g., \code{"jpeg"}, \code{"png"}; default \code{"jpeg"}).}
+\item{plot_format}{Character; format to save the plot (e.g., \code{"jpeg"}, \code{"png"}; default \code{"png"}).}
 }
 \value{
 A \strong{named list} of rasters:

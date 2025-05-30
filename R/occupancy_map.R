@@ -15,8 +15,8 @@
 #' @param plot_ci Logical; if `TRUE`, confidence interval maps are plotted along with the mean and SE.
 #' @param ci_level Numeric; confidence level for intervals (default 0.95).
 #' @param save_plot Logical; if `TRUE`, the plot will be saved to disk.
-#' @param plot_filename Character; base filename for saving the plot (default `"occupancy_plot"`).
-#' @param plot_format Character; format to save the plot (e.g., `"jpeg"`, `"png"`; default `"jpeg"`).
+#' @param plot_filename Character; base filename for saving the plot (default `"occupancy_map"`).
+#' @param plot_format Character; format to save the plot (e.g., `"jpeg"`, `"png"`; default `"png"`).
 #'
 #' @return A **named list** of rasters:
 #' \item{mean}{Raster layer of predicted occupancy probabilities.}
@@ -56,8 +56,8 @@ occupancy_map <- function(
     plot_ci = FALSE,
     ci_level = 0.95,
     save_plot = FALSE,
-    plot_filename = "occupancy_plot",
-    plot_format = "jpeg"
+    plot_filename = "occupancy_map",
+    plot_format = "png"
 ) {
   return_class <- match.arg(return_class)
 
@@ -217,7 +217,7 @@ occupancy_map <- function(
       ggplot2::geom_raster() +
       ggplot2::scale_fill_viridis_c(
         name = "Occupancy\nprobability",
-        option = "magma",
+        option = "viridis",
         na.value = "transparent",
         limits = c(0, 1)
       ) +
