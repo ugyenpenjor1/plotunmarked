@@ -1,40 +1,65 @@
-
-#' Create and plot model-averaged occupancy prediction map
+#' Model-averaged occupancy map prediction and visualisation
 #'
-#' Generates a spatial map of model-averaged occupancy predictions using a list of fitted models,
-#' prediction covariate raster layers, and optionally plots confidence intervals. The prediction raster
-#' can be aggregated to reduce resolution, and the resulting map can be saved to a file.
+#' Generates spatial predictions of occupancy probabilities using model averaging from a set of fitted `unmarked` models. The function aggregates input covariate rasters for efficiency, computes model-averaged predictions, and optionally plots and saves the resulting map with associated uncertainty.
 #'
-#' @param d2_mod_list A list of candidate occupancy models (usually output from \code{unmarked} or
-#'   compatible modeling functions) to be used for model-averaged prediction.
-#' @param pred_cov_stack A \code{SpatRaster} (from the \code{terra} package) OR a \code{RasterLayer} (from the \code{raster} package) containing covariate layers
-#'   used for prediction. Must have layer names matching the covariates in the models.
-#' @param agg_factor Integer. Factor by which to aggregate (downsample) the raster resolution to speed up
-#'   processing. Default is 4.
-#' @param plot_ci Logical. If \code{TRUE}, 95% confidence interval maps (lower and upper bounds) will be plotted
-#'   alongside predicted occupancy and standard error. Default is \code{FALSE}.
-#' @param save_plot Logical. If \code{TRUE}, the generated plot will be saved to disk. Default is \code{FALSE}.
-#' @param plot_filename Character. Filename (without extension) to save the plot. Default is \code{"occupancy_map"}.
-#' @param plot_format Character. File format to save the plot (e.g., \code{"jpeg"}, \code{"png"}, \code{"pdf"}).
-#'   Default is \code{"png"}.
+#' @param d2_mod_list A candidate model set formatted as a list of fitted `unmarkedFit` objects, as required by `AICcmodavg::modavgPred()`. Must include model selection information.
+#' @param pred_cov_stack A `SpatRaster` (from the `terra` package) or a `RasterStack`/`RasterBrick` (from the `raster` package) containing named covariate layers used in the candidate models.
+#' @param agg_factor Integer. Aggregation factor for reducing raster resolution (default is `4`). Helps reduce computational cost for large rasters.
+#' @param plot_ci Logical. If `TRUE`, includes 95% confidence interval bounds (`lower`, `upper`) in the plot. Default is `FALSE`.
+#' @param save_plot Logical. If `TRUE`, saves the plot to a file using the specified filename and format. Default is `FALSE`.
+#' @param plot_filename Character. Base name of the output file (excluding extension). Default is `"occupancy_map"`.
+#' @param plot_format Character. File format for saving the plot (e.g., `"png"`, `"jpeg"`). Default is `"png"`.
 #'
-#' @return A list (invisibly) containing:
-#' \item{pred_df}{A data.frame with predicted occupancy, standard errors, confidence intervals, and coordinates.}
-#' \item{pred_raster}{A \code{SpatRaster} of predicted occupancy values.}
-#' \item{mod_avg_pred}{A list of numeric vectors containing model-averaged predictions and uncertainty measures.}
+#' @return A (named) list containing:
+#' \describe{
+#'   \item{`pred_df`}{A data frame with x/y coordinates, predicted occupancy (`Predicted`), standard error (`SE`), and confidence interval bounds (`lower`, `upper`).}
+#'   \item{`pred_raster`}{A `SpatRaster` of predicted occupancy probabilities.}
+#'   \item{`mod_avg_pred`}{A list of numeric vectors: `mod.avg.pred`, `uncond.se`, `lower.CL`, `upper.CL` for each raster cell.}
+#' }
+#' The raster resolution of the output matches the aggregated resolution specified by `agg_factor`.
 #'
-#' @importFrom terra aggregate rast
-#' @importFrom ggplot2 ggplot aes geom_raster scale_fill_viridis_c coord_equal theme_minimal labs facet_wrap theme element_rect element_text element_blank ggsave
+#' @details This function performs model averaging over multiple candidate models using the `AICcmodavg` package and spatial covariate data. Predictions are performed on an aggregated version of the input raster stack to improve speed. A chunking mechanism is used to process raster cells in batches and a progress bar is shown during computation.
+#'
+#' If `plot_ci = TRUE`, the output map will include lower and upper 95% confidence bounds. All maps are created using `ggplot2`.
+#'
+#' @importFrom terra rast aggregate
+#' @importFrom raster stack brick
+#' @importFrom ggplot2 ggplot aes geom_raster scale_fill_viridis_c coord_equal theme_minimal labs facet_wrap theme element_rect element_text ggsave
 #' @importFrom progress progress_bar
 #' @importFrom AICcmodavg modavgPred
+#' @export
 #'
 #' @examples
 #' \dontrun{
-#' # Assuming d2_mod_list is your list of models and pred_cov_stack is your raster stack:
-#' result <- modavg_occupancy_map(d2_mod_list, pred_cov_stack, agg_factor = 2, plot_ci = TRUE)
-#' }
+#' library(unmarked)
+#' library(terra)
+#' library(AICcmodavg)
 #'
-#' @export
+#' # Create synthetic data and fit two simple models
+#' umf <- unmarkedFrameOccu(y = matrix(sample(0:1, 100, TRUE), ncol = 5),
+#'                          siteCovs = data.frame(elev = rnorm(20), forest = rnorm(20)))
+#' m1 <- occu(~1 ~ elev, data = umf)
+#' m2 <- occu(~1 ~ forest, data = umf)
+#' mod_list <- list(m1 = m1, m2 = m2)
+#'
+#' # Prepare raster covariates
+#' elev_rast <- rast(matrix(rnorm(100), 10, 10))
+#' forest_rast <- rast(matrix(rnorm(100), 10, 10))
+#' names(elev_rast) <- "elev"
+#' names(forest_rast) <- "forest"
+#' cov_stack <- c(elev_rast, forest_rast)
+#'
+#' # Using raster package
+#' elev_rast <- raster(matrix(rnorm(100), 10, 10))
+#' forest_rast <- raster(matrix(rnorm(100), 10, 10))
+#' names(elev_rast) <- "elev"
+#' names(forest_rast) <- "forest"
+#' cov_stack <- stack(elev_rast, forest_rast)
+#'
+#' # Generate occupancy map using model averaging
+#' result <- modavg_occupancy_map(d2_mod_list = mod_list, pred_cov_stack = cov_stack)
+#' }
+
 
 modavg_occupancy_map <- function(
     d2_mod_list,
@@ -45,7 +70,16 @@ modavg_occupancy_map <- function(
     plot_filename = "occupancy_map",
     plot_format = "png"
 ) {
-  if (is.null(names(pred_cov_stack))) stop("pred_cov_stack must have layer names matching model covariates.")
+  # Convert raster::Raster* objects to terra::SpatRaster
+  if (inherits(pred_cov_stack, "Raster")) {
+    pred_cov_stack <- terra::rast(pred_cov_stack)
+  } else if (!inherits(pred_cov_stack, "SpatRaster")) {
+    stop("pred_cov_stack must be a 'SpatRaster' (terra) or 'RasterStack/Brick' (raster).")
+  }
+
+  if (is.null(names(pred_cov_stack))) {
+    stop("pred_cov_stack must have layer names matching model covariates.")
+  }
 
   pred_cov_reduced <- terra::aggregate(
     pred_cov_stack,
@@ -104,7 +138,7 @@ modavg_occupancy_map <- function(
 
   # Clamp values to valid probability range [0, 1]
   pred_df$Predicted <- pmin(pmax(pred_df$Predicted, 0), 1)
-  pred_df$SE <- pmax(pred_df$SE, 0)  # SE can't be negative but can exceed 1 if wildly wrong
+  pred_df$SE <- pmax(pred_df$SE, 0)
   pred_df$lower <- pmin(pmax(pred_df$lower, 0), 1)
   pred_df$upper <- pmin(pmax(pred_df$upper, 0), 1)
 
