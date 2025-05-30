@@ -9,7 +9,7 @@
 #' @param use_detection Logical; if \code{TRUE}, the binary response is derived
 #'   from observed detection history. If \code{FALSE}, it uses the mean posterior
 #'   occupancy probability (EBUP) across models.
-#' @param detection_history Optional detection/non-detection matrix (sites × surveys).
+#' @param detection_history Optional detection/non-detection matrix (sites x surveys).
 #'   Required if \code{use_detection = TRUE}.
 #'
 #' @return A list containing:
@@ -81,7 +81,7 @@ auc_modavg_plot <- function(model_list, use_detection = TRUE, detection_history 
 
   # Generate AUC text
   auc_ci <- as.numeric(roc_obj$ci)
-  auc_text <- sprintf("AUC: %.2f\n95%% CI: %.2f–%.2f", auc_ci[2], auc_ci[1], auc_ci[3])
+  auc_text <- sprintf("AUC: %.2f\n95%% CI: %.2f-%.2f", auc_ci[2], auc_ci[1], auc_ci[3])
 
   # Create data for ggplot using ROCR
   pred_rocr <- ROCR::prediction(psi, y_true)

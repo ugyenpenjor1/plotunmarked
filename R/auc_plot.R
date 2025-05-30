@@ -79,7 +79,7 @@ auc_plot <- function(model, use_detection = TRUE, detection_history = NULL) {
 
   # Format AUC text
   auc_ci <- as.numeric(roc_obj$ci)
-  auc_text <- sprintf("AUC: %.2f\n95%% CI: %.2f–%.2f", auc_ci[2], auc_ci[1], auc_ci[3])
+  auc_text <- sprintf("AUC: %.2f\n95%% CI: %.2f-%.2f", auc_ci[2], auc_ci[1], auc_ci[3])
 
   # Build ROC data using ROCR for plotting
   pred_rocr <- ROCR::prediction(psi, y_true)

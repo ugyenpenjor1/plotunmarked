@@ -13,7 +13,7 @@ auc_modavg_plot(model_list, use_detection = TRUE, detection_history = NULL)
 from observed detection history. If \code{FALSE}, it uses the mean posterior
 occupancy probability (EBUP) across models.}
 
-\item{detection_history}{Optional detection/non-detection matrix (sites × surveys).
+\item{detection_history}{Optional detection/non-detection matrix (sites x surveys).
 Required if \code{use_detection = TRUE}.}
 }
 \value{
