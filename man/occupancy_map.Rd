@@ -2,7 +2,7 @@
 % Please edit documentation in R/occupancy_map.R
 \name{occupancy_map}
 \alias{occupancy_map}
-\title{Generate occupancy probability maps from an unmarked model}
+\title{Predict and visualise occupancy from an unmarked model}
 \usage{
 occupancy_map(
   model,
@@ -17,52 +17,62 @@ occupancy_map(
 )
 }
 \arguments{
-\item{model}{An \code{unmarkedFit} model object (from the \code{unmarked} package).}
+\item{model}{A fitted model of class \code{unmarkedFit}, typically from the \code{unmarked} package.}
 
-\item{covariate_rasters}{A \strong{named list} of raster objects (either \code{SpatRaster} or \code{RasterLayer})
-matching the covariates used in the occupancy model. The names should correspond
-to the covariate names in the model.}
+\item{covariate_rasters}{A named list of raster covariates (\code{SpatRaster} or \code{RasterLayer}), where names match the occupancy covariates used in the model. The list must include all covariates used in the model, excluding the intercept.}
 
-\item{return_class}{Character specifying the raster class of output maps.
-One of \code{"same"} (default, match input raster class), \code{"terra"}, or \code{"raster"}.}
+\item{return_class}{Character. Specifies the class of raster returned. Options are \code{"same"} (default, returns the same class as input), \code{"terra"} (returns \code{SpatRaster}), or \code{"raster"} (returns \code{RasterLayer}).}
 
-\item{plot_map}{Logical; if \code{TRUE} (default), a map plot is displayed.}
+\item{plot_map}{Logical. If \code{TRUE} (default), plots the predicted occupancy map and uncertainty layers.}
 
-\item{plot_ci}{Logical; if \code{TRUE}, confidence interval maps are plotted along with the mean and SE.}
+\item{plot_ci}{Logical. If \code{TRUE}, plots confidence interval bounds on the occupancy scale.}
 
-\item{ci_level}{Numeric; confidence level for intervals (default 0.95).}
+\item{ci_level}{Numeric. Confidence level for intervals (default is \code{0.95} for 95\% CI).}
 
-\item{save_plot}{Logical; if \code{TRUE}, the plot will be saved to disk.}
+\item{save_plot}{Logical. If \code{TRUE}, saves the plot to a file using the specified format and filename.}
 
-\item{plot_filename}{Character; base filename for saving the plot (default \code{"occupancy_map"}).}
+\item{plot_filename}{Character. Base filename to save the plot (without file extension). Default is \code{"occupancy_map"}.}
 
-\item{plot_format}{Character; format to save the plot (e.g., \code{"jpeg"}, \code{"png"}; default \code{"png"}).}
+\item{plot_format}{Character. File format to use when saving the plot (e.g., \code{"jpeg"}, \code{"png"}). Default is \code{"png"}.}
 }
 \value{
-A \strong{named list} of rasters:
-\item{mean}{Raster layer of predicted occupancy probabilities.}
-\item{se}{Raster layer of standard errors.}
-\item{lower}{(If \code{plot_ci = TRUE}) Raster layer of lower confidence interval bound.}
-\item{upper}{(If \code{plot_ci = TRUE}) Raster layer of upper confidence interval bound.}
-
-The result is returned invisibly.
+A (named) list of raster objects containing:
+\describe{
+\item{\code{mean}}{Raster of predicted occupancy probabilities.}
+\item{\code{se}}{Raster of standard errors on the probability scale.}
+\item{\code{lower}, \code{upper}}{(If \code{plot_ci = TRUE}) Rasters of lower and upper bounds of the confidence interval.}
+}
+All returned raster layers match the format specified by \code{return_class}.
 }
 \description{
-This function creates spatial maps of predicted occupancy probabilities
-based on an \code{unmarkedFit} model and a set of covariate rasters. It can
-return the maps as either terra or raster objects, optionally plot the maps,
-show confidence intervals, and save the plot to a file.
+Computes spatial predictions of occupancy probabilities from a fitted \code{unmarkedFit} model and raster covariates. Optionally plots the map and saves it to a file.
 }
 \details{
-The function extracts coefficients and variance-covariance matrix from the
-unmarked occupancy model, combines them with spatial covariate rasters to compute
-predicted occupancy probabilities on the map. It supports plotting using ggplot2
-with options to display uncertainty and save plots.
+The function uses model coefficients and their variance-covariance matrix to generate occupancy predictions across a spatial surface defined by the input covariate rasters. The intercept term is handled internally by generating a constant raster. Variance propagation is performed via the delta method.
+
+If \code{plot_map = TRUE}, the function creates a \code{ggplot2}-based map visualising the predicted occupancy, standard error, and optionally, the confidence interval bounds. Plots are saved using \code{ggsave()} if \code{save_plot = TRUE}.
+
+A progress bar is shown during uncertainty calculation if the \code{pbapply} package is installed.
 }
 \examples{
 \dontrun{
-# Assuming `fit` is an unmarkedFit model and `covs` a named list of rasters
-result <- occupancy_map(fit, covs, plot_map = TRUE, plot_ci = TRUE, save_plot = TRUE)
-}
+library(unmarked)
+library(terra)
 
+# Fit a simple model (example assumes you have data in unmarkedFrame)
+umf <- unmarkedFrameOccu(y = matrix(sample(0:1, 100, TRUE), ncol = 5),
+                         siteCovs = data.frame(elev = rnorm(20), forest = rnorm(20)))
+mod <- occu(~1 ~ elev + forest, data = umf)
+
+# Prepare raster covariates
+elev_rast <- rast(matrix(rnorm(100), 10, 10))
+forest_rast <- rast(matrix(rnorm(100), 10, 10))
+names(elev_rast) <- "elev"
+names(forest_rast) <- "forest"
+
+covariate_rasters <- list(elev = elev_rast, forest = forest_rast)
+
+# Generate and plot map
+result <- occupancy_map(model = mod, covariate_rasters = covariate_rasters)
+}
 }

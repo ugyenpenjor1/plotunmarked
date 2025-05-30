@@ -1,52 +1,61 @@
-#' Generate occupancy probability maps from an unmarked model
+#' Predict and visualise occupancy from an unmarked model
 #'
-#' This function creates spatial maps of predicted occupancy probabilities
-#' based on an `unmarkedFit` model and a set of covariate rasters. It can
-#' return the maps as either terra or raster objects, optionally plot the maps,
-#' show confidence intervals, and save the plot to a file.
+#' Computes spatial predictions of occupancy probabilities from a fitted `unmarkedFit` model and raster covariates. Optionally plots the map and saves it to a file.
 #'
-#' @param model An `unmarkedFit` model object (from the `unmarked` package).
-#' @param covariate_rasters A **named list** of raster objects (either `SpatRaster` or `RasterLayer`)
-#'   matching the covariates used in the occupancy model. The names should correspond
-#'   to the covariate names in the model.
-#' @param return_class Character specifying the raster class of output maps.
-#'   One of `"same"` (default, match input raster class), `"terra"`, or `"raster"`.
-#' @param plot_map Logical; if `TRUE` (default), a map plot is displayed.
-#' @param plot_ci Logical; if `TRUE`, confidence interval maps are plotted along with the mean and SE.
-#' @param ci_level Numeric; confidence level for intervals (default 0.95).
-#' @param save_plot Logical; if `TRUE`, the plot will be saved to disk.
-#' @param plot_filename Character; base filename for saving the plot (default `"occupancy_map"`).
-#' @param plot_format Character; format to save the plot (e.g., `"jpeg"`, `"png"`; default `"png"`).
+#' @param model A fitted model of class `unmarkedFit`, typically from the `unmarked` package.
+#' @param covariate_rasters A named list of raster covariates (`SpatRaster` or `RasterLayer`), where names match the occupancy covariates used in the model. The list must include all covariates used in the model, excluding the intercept.
+#' @param return_class Character. Specifies the class of raster returned. Options are `"same"` (default, returns the same class as input), `"terra"` (returns `SpatRaster`), or `"raster"` (returns `RasterLayer`).
+#' @param plot_map Logical. If `TRUE` (default), plots the predicted occupancy map and uncertainty layers.
+#' @param plot_ci Logical. If `TRUE`, plots confidence interval bounds on the occupancy scale.
+#' @param ci_level Numeric. Confidence level for intervals (default is `0.95` for 95% CI).
+#' @param save_plot Logical. If `TRUE`, saves the plot to a file using the specified format and filename.
+#' @param plot_filename Character. Base filename to save the plot (without file extension). Default is `"occupancy_map"`.
+#' @param plot_format Character. File format to use when saving the plot (e.g., `"jpeg"`, `"png"`). Default is `"png"`.
 #'
-#' @return A **named list** of rasters:
-#' \item{mean}{Raster layer of predicted occupancy probabilities.}
-#' \item{se}{Raster layer of standard errors.}
-#' \item{lower}{(If `plot_ci = TRUE`) Raster layer of lower confidence interval bound.}
-#' \item{upper}{(If `plot_ci = TRUE`) Raster layer of upper confidence interval bound.}
+#' @return A (named) list of raster objects containing:
+#' \describe{
+#'   \item{`mean`}{Raster of predicted occupancy probabilities.}
+#'   \item{`se`}{Raster of standard errors on the probability scale.}
+#'   \item{`lower`, `upper`}{(If `plot_ci = TRUE`) Rasters of lower and upper bounds of the confidence interval.}
+#' }
+#' All returned raster layers match the format specified by `return_class`.
 #'
-#' The result is returned invisibly.
+#' @details The function uses model coefficients and their variance-covariance matrix to generate occupancy predictions across a spatial surface defined by the input covariate rasters. The intercept term is handled internally by generating a constant raster. Variance propagation is performed via the delta method.
 #'
-#' @details
-#' The function extracts coefficients and variance-covariance matrix from the
-#' unmarked occupancy model, combines them with spatial covariate rasters to compute
-#' predicted occupancy probabilities on the map. It supports plotting using ggplot2
-#' with options to display uncertainty and save plots.
+#' If `plot_map = TRUE`, the function creates a `ggplot2`-based map visualising the predicted occupancy, standard error, and optionally, the confidence interval bounds. Plots are saved using `ggsave()` if `save_plot = TRUE`.
 #'
-#' @importFrom stats qnorm
+#' A progress bar is shown during uncertainty calculation if the `pbapply` package is installed.
+#'
 #' @importFrom terra rast app values global
 #' @importFrom raster raster cellStats
 #' @importFrom ggplot2 ggplot aes geom_raster scale_fill_viridis_c coord_equal theme_minimal labs facet_wrap theme element_rect element_text ggsave
-#' @importFrom pbapply pbapply
-#' @importFrom stats setNames sd
+#' @importFrom stats qnorm
 #' @importFrom unmarked coef vcov
+#' @importFrom pbapply pbapply
+#' @export
 #'
 #' @examples
 #' \dontrun{
-#' # Assuming `fit` is an unmarkedFit model and `covs` a named list of rasters
-#' result <- occupancy_map(fit, covs, plot_map = TRUE, plot_ci = TRUE, save_plot = TRUE)
-#' }
+#' library(unmarked)
+#' library(terra)
 #'
-#' @export
+#' # Fit a simple model (example assumes you have data in unmarkedFrame)
+#' umf <- unmarkedFrameOccu(y = matrix(sample(0:1, 100, TRUE), ncol = 5),
+#'                          siteCovs = data.frame(elev = rnorm(20), forest = rnorm(20)))
+#' mod <- occu(~1 ~ elev + forest, data = umf)
+#'
+#' # Prepare raster covariates
+#' elev_rast <- rast(matrix(rnorm(100), 10, 10))
+#' forest_rast <- rast(matrix(rnorm(100), 10, 10))
+#' names(elev_rast) <- "elev"
+#' names(forest_rast) <- "forest"
+#'
+#' covariate_rasters <- list(elev = elev_rast, forest = forest_rast)
+#'
+#' # Generate and plot map
+#' result <- occupancy_map(model = mod, covariate_rasters = covariate_rasters)
+#' }
+
 
 occupancy_map <- function(
     model,
@@ -69,13 +78,22 @@ occupancy_map <- function(
     stop("`covariate_rasters` must be a named list of rasters with names matching model covariates.")
   }
 
-  # Extract coefficients and VCV matrix
+  # # Extract coefficients and VCV matrix
   beta <- unmarked::coef(model)
   vcov_mat <- unmarked::vcov(model)
 
   psi_coefs <- beta[grep("^psi\\(", names(beta))]
-  names_clean <- gsub("^psi\\((.*)\\)$", "\\1", names(psi_coefs))
-  names(psi_coefs) <- names_clean
+  model_covariate_names <- gsub("^psi\\((.*)\\)$", "\\1", names(psi_coefs))
+  names(psi_coefs) <- model_covariate_names
+
+  # Check covariate raster names match
+  # Ignore intercept ("Int") when checking for covariate rasters
+  missing_covs <- setdiff(setdiff(model_covariate_names, "Int"), names(covariate_rasters))
+  if (length(missing_covs) > 0) {
+    stop("Missing raster(s) for the following model covariates: ", paste(missing_covs, collapse = ", "))
+  } else {
+    message("Raster list names match model covariates: ", paste(model_covariate_names, collapse = ", "))
+  }
 
   coef_names <- names(psi_coefs)
   beta_vec <- psi_coefs
@@ -83,17 +101,22 @@ occupancy_map <- function(
   # Extract relevant VCV matrix
   beta_idx <- grep("^psi\\(", rownames(vcov_mat))
   V_sub <- vcov_mat[beta_idx, beta_idx]
-  rownames(V_sub) <- colnames(V_sub) <- names_clean
+  rownames(V_sub) <- colnames(V_sub) <- model_covariate_names
 
-  # Create raster stack of covariates
+  # Create raster stack of covariates (suppor both terra and raster)
   X_stack <- terra::rast(lapply(coef_names, function(cov) {
     if (cov == "Int") {
+      # Intercept: create constant raster
       base_raster <- covariate_rasters[[1]]
+      if (inherits(base_raster, "Raster")) base_raster <- terra::rast(base_raster)
       return(base_raster * 0 + 1)
     } else {
       rast <- covariate_rasters[[cov]]
       if (!inherits(rast, c("SpatRaster", "RasterLayer"))) {
         stop(sprintf("Raster for '%s' must be SpatRaster or RasterLayer.", cov))
+      }
+      if (inherits(rast, "Raster")) {
+        rast <- terra::rast(rast)
       }
       return(rast)
     }
@@ -111,7 +134,7 @@ occupancy_map <- function(
         stop(sprintf("Raster for '%s' has no non-NA values.", cov))
       }
     } else {
-      if (raster::cellStats(r, stat = function(x) sum(!is.na(x))) == 0) {
+      if (raster::cellStats(r, stat = function(x, ...) sum(!is.na(x))) == 0) {
         stop(sprintf("Raster for '%s' has no non-NA values.", cov))
       }
     }
