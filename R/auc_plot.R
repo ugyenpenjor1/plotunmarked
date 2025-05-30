@@ -17,7 +17,7 @@
 #' \describe{
 #'   \item{\code{roc}}{An object of class \code{roc} from \pkg{pROC} containing ROC data.}
 #'   \item{\code{auc}}{The AUC value.}
-#'   \item{\code{auc_ci}}{The 90\% confidence interval for AUC.}
+#'   \item{\code{auc_ci}}{The 95\% confidence interval for AUC.}
 #'   \item{\code{y_true}}{Binary observed occupancy (used as response).}
 #'   \item{\code{predicted}}{Predicted occupancy probabilities.}
 #'   \item{\code{plot}}{A \code{ggplot2} ROC curve plot.}
@@ -27,10 +27,10 @@
 #'   \code{model}, compares them to either observed presence/absence
 #'   (via \code{detection_history}) or to the model's posterior mean estimates,
 #'   and computes AUC statistics using \pkg{pROC}. The ROC curve is then
-#'   visualized using \pkg{ggplot2}.
+#'   visualised using \pkg{ggplot2}.
 #'
 #' @importFrom pROC roc
-#' @importFrom unmarked ranef bup
+#' @importFrom unmarked ranef bup predict
 #' @importFrom ROCR prediction performance
 #' @importFrom ggplot2 ggplot aes geom_line geom_abline annotate labs theme_bw
 #'
@@ -73,7 +73,7 @@ auc_plot <- function(model, use_detection = TRUE, detection_history = NULL) {
     predictor = psi,
     smoothed = TRUE,
     ci = TRUE,
-    ci.alpha = 0.9,
+    ci.alpha = 0.95,
     plot = FALSE
   )
 
@@ -101,13 +101,17 @@ auc_plot <- function(model, use_detection = TRUE, detection_history = NULL) {
   print(p)
 
   # Return AUC components
-  return(list(
-    roc = roc_obj,
-    auc = roc_obj$auc,
-    auc_ci = roc_obj$ci,
-    y_true = y_true,
-    predicted = psi,
-    plot = p
-  ))
+  return(
+    invisible(
+      list(
+        roc = roc_obj,
+        auc = roc_obj$auc,
+        auc_ci = roc_obj$ci,
+        y_true = y_true,
+        predicted = psi,
+        plot = p
+      )
+    )
+  )
 }
 

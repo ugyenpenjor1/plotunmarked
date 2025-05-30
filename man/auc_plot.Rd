@@ -22,7 +22,7 @@ A list with the following elements:
 \describe{
 \item{\code{roc}}{An object of class \code{roc} from \pkg{pROC} containing ROC data.}
 \item{\code{auc}}{The AUC value.}
-\item{\code{auc_ci}}{The 90\\% confidence interval for AUC.}
+\item{\code{auc_ci}}{The 95\\% confidence interval for AUC.}
 \item{\code{y_true}}{Binary observed occupancy (used as response).}
 \item{\code{predicted}}{Predicted occupancy probabilities.}
 \item{\code{plot}}{A \code{ggplot2} ROC curve plot.}
@@ -38,7 +38,7 @@ The function calculates predicted occupancy probabilities from
 \code{model}, compares them to either observed presence/absence
 (via \code{detection_history}) or to the model's posterior mean estimates,
 and computes AUC statistics using \pkg{pROC}. The ROC curve is then
-visualized using \pkg{ggplot2}.
+visualised using \pkg{ggplot2}.
 }
 \examples{
 \dontrun{
