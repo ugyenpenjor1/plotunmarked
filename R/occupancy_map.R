@@ -37,7 +37,8 @@
 #' @importFrom raster raster cellStats
 #' @importFrom ggplot2 ggplot aes geom_raster scale_fill_viridis_c coord_equal theme_minimal labs facet_wrap theme element_rect element_text ggsave
 #' @importFrom pbapply pbapply
-#' @importFrom stats setNames coef sd vcov
+#' @importFrom stats setNames sd
+#' @importFrom unmarked coef vcov
 #'
 #' @examples
 #' \dontrun{
@@ -69,8 +70,8 @@ occupancy_map <- function(
   }
 
   # Extract coefficients and VCV matrix
-  beta <- coef(model)
-  vcov_mat <- vcov(model)
+  beta <- unmarked::coef(model)
+  vcov_mat <- unmarked::vcov(model)
 
   psi_coefs <- beta[grep("^psi\\(", names(beta))]
   names_clean <- gsub("^psi\\((.*)\\)$", "\\1", names(psi_coefs))
