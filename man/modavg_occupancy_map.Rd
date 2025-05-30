@@ -2,44 +2,53 @@
 % Please edit documentation in R/modavg_occupancy_map.R
 \name{modavg_occupancy_map}
 \alias{modavg_occupancy_map}
-\title{Model-averaged occupancy prediction map}
+\title{Create and plot model-averaged occupancy prediction map}
 \usage{
-modavg_occupancy_map(d2_mod_list, pred_cov_stack, agg_factor = 4)
+modavg_occupancy_map(
+  d2_mod_list,
+  pred_cov_stack,
+  agg_factor = 4,
+  plot_ci = FALSE,
+  save_plot = FALSE,
+  plot_filename = "occupancy_plot",
+  plot_format = "jpeg"
+)
 }
 \arguments{
-\item{d2_mod_list}{A candidate model set, typically created using
-\code{AICcmodavg::aictab} or as a list of fitted unmarked models.}
+\item{d2_mod_list}{A list of candidate occupancy models (usually output from \code{unmarked} or
+compatible modeling functions) to be used for model-averaged prediction.}
 
-\item{pred_cov_stack}{A \code{terra::SpatRaster} with named layers
-corresponding to the covariates used in the models.}
+\item{pred_cov_stack}{A \code{SpatRaster} (from the \code{terra} package) containing covariate layers
+used for prediction. Must have layer names matching the covariates in the models.}
 
-\item{agg_factor}{An integer specifying the aggregation factor to reduce
-raster resolution before prediction. Default is 4.}
+\item{agg_factor}{Integer. Factor by which to aggregate (downsample) the raster resolution to speed up
+processing. Default is 4.}
+
+\item{plot_ci}{Logical. If \code{TRUE}, 95\% confidence interval maps (lower and upper bounds) will be plotted
+alongside predicted occupancy and standard error. Default is \code{FALSE}.}
+
+\item{save_plot}{Logical. If \code{TRUE}, the generated plot will be saved to disk. Default is \code{FALSE}.}
+
+\item{plot_filename}{Character. Filename (without extension) to save the plot. Default is \code{"occupancy_plot"}.}
+
+\item{plot_format}{Character. File format to save the plot (e.g., \code{"jpeg"}, \code{"png"}, \code{"pdf"}).
+Default is \code{"jpeg"}.}
 }
 \value{
-A list with the following elements:
-\describe{
-\item{\code{pred_df}}{A data frame containing predictions and coordinates.}
-\item{\code{pred_raster}}{A \code{terra::SpatRaster} object of predicted occupancy.}
-\item{\code{mod_avg_pred}}{A list containing predicted values, standard errors,
-and confidence intervals.}
-}
+A list (invisibly) containing:
+\item{pred_df}{A data.frame with predicted occupancy, standard errors, confidence intervals, and coordinates.}
+\item{pred_raster}{A \code{SpatRaster} of predicted occupancy values.}
+\item{mod_avg_pred}{A list of numeric vectors containing model-averaged predictions and uncertainty measures.}
 }
 \description{
-Generates a spatial map of model-averaged occupancy probabilities using a
-list of fitted occupancy models and a raster stack of covariates.
-}
-\details{
-The function splits the raster prediction task into manageable chunks,
-making it memory-efficient for large areas. It uses
-\code{AICcmodavg::modavgPred()} for model-averaged predictions. A progress bar
-from \code{progress} package is displayed during execution.
+Generates a spatial map of model-averaged occupancy predictions using a list of fitted models,
+prediction covariate raster layers, and optionally plots confidence intervals. The prediction raster
+can be aggregated to reduce resolution, and the resulting map can be saved to a file.
 }
 \examples{
 \dontrun{
-# Assuming 'models' is a list of fitted unmarked models,
-# and 'cov_stack' is a SpatRaster of covariates
-result <- modavg_occupancy_map(models, cov_stack, agg_factor = 4)
+# Assuming d2_mod_list is your list of models and pred_cov_stack is your raster stack:
+result <- modavg_occupancy_map(d2_mod_list, pred_cov_stack, agg_factor = 2, plot_ci = TRUE)
 }
 
 }
