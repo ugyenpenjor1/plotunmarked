@@ -218,7 +218,7 @@ occupancy_map <- function(
         name = "Occupancy\nprobability",
         option = "magma",
         na.value = "transparent",
-        imits = c(0, 1)
+        limits = c(0, 1)
       ) +
       ggplot2::coord_equal() +
       ggplot2::theme_minimal() +
