@@ -8,8 +8,8 @@
 <!-- badges: end -->
 
 The goal of **plotunmarked** is to provide convenient plotting functions
-for visualizing predictions from unmarked models, particularly occupancy
-estimates.
+for visualising predictions from unmarked models, particularly occupancy
+estimates - a quick and dirty approach!
 
 ## Installation
 
@@ -20,7 +20,7 @@ You can install the development version of plotunmarked from
 # install.packages("pak")
 pak::pak("ugyenpenjor1/plotunmarked")
 # OR using devtools:
-# devtools::install_github("ugyenpenjor1/plotunmarked")
+devtools::install_github("ugyenpenjor1/plotunmarked")
 ```
 
 ## Example
