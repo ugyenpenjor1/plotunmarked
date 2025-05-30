@@ -10,15 +10,15 @@ modavg_occupancy_map(
   agg_factor = 4,
   plot_ci = FALSE,
   save_plot = FALSE,
-  plot_filename = "occupancy_plot",
-  plot_format = "jpeg"
+  plot_filename = "occupancy_map",
+  plot_format = "png"
 )
 }
 \arguments{
 \item{d2_mod_list}{A list of candidate occupancy models (usually output from \code{unmarked} or
 compatible modeling functions) to be used for model-averaged prediction.}
 
-\item{pred_cov_stack}{A \code{SpatRaster} (from the \code{terra} package) containing covariate layers
+\item{pred_cov_stack}{A \code{SpatRaster} (from the \code{terra} package) OR a \code{RasterLayer} (from the \code{raster} package) containing covariate layers
 used for prediction. Must have layer names matching the covariates in the models.}
 
 \item{agg_factor}{Integer. Factor by which to aggregate (downsample) the raster resolution to speed up
@@ -29,10 +29,10 @@ alongside predicted occupancy and standard error. Default is \code{FALSE}.}
 
 \item{save_plot}{Logical. If \code{TRUE}, the generated plot will be saved to disk. Default is \code{FALSE}.}
 
-\item{plot_filename}{Character. Filename (without extension) to save the plot. Default is \code{"occupancy_plot"}.}
+\item{plot_filename}{Character. Filename (without extension) to save the plot. Default is \code{"occupancy_map"}.}
 
 \item{plot_format}{Character. File format to save the plot (e.g., \code{"jpeg"}, \code{"png"}, \code{"pdf"}).
-Default is \code{"jpeg"}.}
+Default is \code{"png"}.}
 }
 \value{
 A list (invisibly) containing:
