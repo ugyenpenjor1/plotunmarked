@@ -25,7 +25,7 @@ devtools::install_github("ugyenpenjor1/plotunmarked")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem.
+This is a basic example which shows you how to use the functions of the package.
 
 ### Plot occupancy vs covariate
 
