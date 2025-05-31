@@ -25,16 +25,22 @@ devtools::install_github("ugyenpenjor1/plotunmarked")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example which shows you how to solve a common problem.
 
-``` r
+### Plot occupancy vs covariate
+
+Below is an example of how to plot occupancy against a covariate using the `plot_occupancy()` function
+
+```r
 library(plotunmarked)
 if (requireNamespace("unmarked", quietly = TRUE)) {
-  # Example usage
-  # model <- occu(~ detection ~ cov1, data = umf)
-  # plot_occupancy(model, "cov1")
+  # Plot occupancy vs covariate 
+  plot_occupancy(
+    mod2,
+    "droa", # change this to plot for other variables
+    xlab = "Distance to road (standardised)"
+  )
 }
-#> NULL
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`?
