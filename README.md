@@ -42,6 +42,7 @@ if (requireNamespace("unmarked", quietly = TRUE)) {
   )
 }
 ```
+<img src="man/figures/cov_plot.png" width="100%" />
 
 What is special about using `README.Rmd` instead of just `README.md`?
 You can include R chunks like so:
