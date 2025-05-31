@@ -36,7 +36,7 @@ library(plotunmarked)
 if (requireNamespace("unmarked", quietly = TRUE)) {
   # Plot occupancy vs covariate 
   plot_occupancy(
-    mod2,
+    model,
     "droa", # change this to plot for other variables
     xlab = "Distance to road (standardised)"
   )
