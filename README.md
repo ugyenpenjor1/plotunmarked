@@ -68,7 +68,7 @@ library(raster)
 riv <- raster("C/yourdirectory/dist_river.tif")
 ```
 
-#### Standardise raster using mean and SD of covaraites used in the model
+#### Standardise raster using mean and SD of covariates
 
 Use `standardise_raster()` function to standardise raster.
 
@@ -85,11 +85,7 @@ Create a raster list and make a map
 
 ```r
 # Create a raster list
-raster_list <- list(
-  driv = driv,
-  droa = droa,
-  elev = ele
-)
+raster_list <- list(driv = driv, droa = droa, elev = ele)
 
 # Make a map
 psi_map <- occupancy_map(
@@ -105,14 +101,11 @@ psi_map <- occupancy_map(
 ```
 <img src="man/figures/top_psi_map.png" width="60%" />
 
-### Plot predicted occupancy map using model-averaging
+### Plot predicted occupancy map using model-averaged coefficients
 
 ```r
 # Create model list (models within some delta AIC threshold)
-mod_list <- list(
-  "occ.1" = mod2,
-  "occ.2" = mod1
-)
+mod_list <- list("occ.1" = model1, "occ.2" = model2)
 
 # Create raster stack
 raster_stk <- stack(driv_s, droa_s, ele_s, tree_s)         # using raster package
