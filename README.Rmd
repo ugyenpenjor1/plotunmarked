@@ -13,15 +13,25 @@ knitr::opts_chunk$set(
 )
 ```
 
-# plotunmarked
+<table>
+<tr>
+<td>
 
-<!-- badges: start -->
-![Package Logo](man/figures/logo_plotunmarked.png)
-<!-- badges: end -->
+# plotunmarked
 
 The goal of **plotunmarked** is to provide convenient plotting functions
 for visualising predictions from unmarked models, particularly occupancy
 estimates - a quick and dirty approach!
+
+</td>
+<td style="vertical-align: top;">
+
+<img src="man/figures/logo_plotunmarked.png" width="120" />
+
+</td>
+</tr>
+</table>
+
 
 ## Installation
 

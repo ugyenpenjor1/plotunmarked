@@ -1,15 +1,29 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+<table>
+
+<tr>
+
+<td>
+
 # plotunmarked
-
-<!-- badges: start -->
-
-![Package Logo](man/figures/logo_plotunmarked.png) <!-- badges: end -->
 
 The goal of **plotunmarked** is to provide convenient plotting functions
 for visualising predictions from unmarked models, particularly occupancy
 estimates - a quick and dirty approach!
+
+</td>
+
+<td style="vertical-align: top;">
+
+<img src="man/figures/logo_plotunmarked.png" width="120" />
+
+</td>
+
+</tr>
+
+</table>
 
 ## Installation
 
