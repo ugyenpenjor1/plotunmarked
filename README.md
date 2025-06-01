@@ -1,11 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-<table>
+<table style="border: none;">
 
 <tr>
 
-<td>
+<td style="border: none;">
 
 # plotunmarked
 
@@ -15,9 +15,9 @@ estimates - a quick and dirty approach!
 
 </td>
 
-<td style="vertical-align: top;">
+<td style="border: none; vertical-align: top;">
 
-<img src="man/figures/logo_plotunmarked.png" width="120" />
+<img src="man/figures/logo_plotunmarked.png" width="250" />
 
 </td>
 
