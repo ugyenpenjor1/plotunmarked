@@ -1,9 +1,9 @@
 Package: plotunmarked
-Title: Plots output of unmarked single season occupancy model
-Version: 0.0.0.9000
+Title: Utility Tools for Visualising unmarked Package Models
+Version: 0.1.0
 Authors@R: 
     person("Ugyen", "Penjor", , "ugyenpenjor.bt@gmail.com", role = c("aut", "cre"))
-Description: This package uses the output of static occupancy model of unmarked package to create plots. Current functions support plotting occupancy vs covariate, detection vs covariate (site-level but also has option to plot survey-specific covariate), standardises raster using the covaraite values used in the model, plots predicted occupancy maps (top/best model and model-averaged), plots AUC (top/best model and model-averaged).
+Description: This package uses the output of occupancy model of unmarked package to create plots. Current version supports plotting occupancy vs covariate, detection vs covariate (site-level but also has option to plot survey-specific covariate), standardises raster using the covaraite values used in the model, plots predicted occupancy maps (top/best model and model-averaged), plots AUC (top/best model and model-averaged).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

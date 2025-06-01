@@ -1,0 +1,10 @@
+citHeader("To cite the plotunmarked package in publications use:")
+
+ bibentry(
+   "Manual",
+   title = "plotunmarked: Utility Tools for Visualising 'unmarked' Package Models",
+   author = person("Ugyen", "Penjor"),
+   year = "2025",
+   note = "R package version 0.1.0",
+   url = "https://github.com/ugyenpenjor1/plotunmarked"
+ )
