@@ -141,3 +141,7 @@ auc_modavg_plot(
 <img src="man/figures/auc_plot.png" width="60%" />
 
 This work is in progress. If you have any questions or discover bugs, please report to ugyenpenjor.bt@gmail.com. 
+
+To cite package `plotunmarked` in publications use:
+
+Penjor, Ugyen (2025). _plotunmarked: Utility Tools for Visualising `unmarked` Package Models_. R package version 0.1.0. Available at: https://github.com/ugyenpenjor1/plotunmarked
