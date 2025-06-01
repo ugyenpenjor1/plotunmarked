@@ -1,29 +1,51 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-<table style="border: none;">
+<!-- <table style="border: none;"> -->
 
-<tr>
+<!-- <tr> -->
 
-<td style="border: none;">
+<!-- <td style="border: none;"> -->
+
+<!-- # plotunmarked -->
+
+<!-- The goal of **plotunmarked** is to provide convenient plotting functions -->
+
+<!-- for visualising predictions from unmarked models, particularly occupancy -->
+
+<!-- estimates - a quick and dirty approach! -->
+
+<!-- </td> -->
+
+<!-- <td style="border: none; vertical-align: top;"> -->
+
+<!-- <img src="man/figures/logo_plotunmarked.png" width="290" /> -->
+
+<!-- </td> -->
+
+<!-- </tr> -->
+
+<!-- </table> -->
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between;">
+
+<div style="flex: 1;">
 
 # plotunmarked
 
 The goal of **plotunmarked** is to provide convenient plotting functions
 for visualising predictions from unmarked models, particularly occupancy
-estimates - a quick and dirty approach!
+estimates — a quick and dirty approach!
 
-</td>
+</div>
 
-<td style="border: none; vertical-align: top;">
+<div style="margin-left: 20px;">
 
-<img src="man/figures/logo_plotunmarked.png" width="250" />
+<img src="man/figures/logo_plotunmarked.png" width="270" />
 
-</td>
+</div>
 
-</tr>
-
-</table>
+</div>
 
 ## Installation
 
@@ -59,7 +81,10 @@ if (requireNamespace("unmarked", quietly = TRUE)) {
 }
 ```
 
+<p align="center">
+
 <img src="man/figures/cov_plot.png" width="60%" />
+</p>
 
 A similar plot can be made for model-averaged coefficient using the
 `plot_modavg_response()` function.
@@ -119,7 +144,10 @@ psi_map <- occupancy_map(
 )
 ```
 
+<p align="center">
+
 <img src="man/figures/top_psi_map.png" width="60%" />
+</p>
 
 ### Plot predicted occupancy map using model-averaged coefficients
 
@@ -143,7 +171,10 @@ psi_map_ma <- modavg_occupancy_map(
 )
 ```
 
+<p align="center">
+
 <img src="man/figures/modavg_psi_map.png" width="60%" />
+</p>
 
 ### ROC curve and AUC to validate prediction
 
@@ -159,7 +190,10 @@ auc_modavg_plot(
 ) 
 ```
 
+<p align="center">
+
 <img src="man/figures/auc_plot.png" width="60%" />
+</p>
 
 This work is in progress. If you have any questions or discover bugs,
 please report to <ugyenpenjor.bt@gmail.com>.

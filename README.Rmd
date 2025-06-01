@@ -13,24 +13,40 @@ knitr::opts_chunk$set(
 )
 ```
 
-<table style="border: none;">
-<tr>
-<td style="border: none;">
+<!-- <table style="border: none;"> -->
+<!-- <tr> -->
+<!-- <td style="border: none;"> -->
+
+<!-- # plotunmarked -->
+
+<!-- The goal of **plotunmarked** is to provide convenient plotting functions -->
+<!-- for visualising predictions from unmarked models, particularly occupancy -->
+<!-- estimates - a quick and dirty approach! -->
+
+<!-- </td> -->
+<!-- <td style="border: none; vertical-align: top;"> -->
+
+<!-- <img src="man/figures/logo_plotunmarked.png" width="290" /> -->
+
+<!-- </td> -->
+<!-- </tr> -->
+<!-- </table> -->
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between;">
+
+<div style="flex: 1;">
 
 # plotunmarked
 
-The goal of **plotunmarked** is to provide convenient plotting functions
-for visualising predictions from unmarked models, particularly occupancy
-estimates - a quick and dirty approach!
+The goal of **plotunmarked** is to provide convenient plotting functions for visualising predictions from unmarked models, particularly occupancy estimates — a quick and dirty approach!
 
-</td>
-<td style="border: none; vertical-align: top;">
+</div>
 
-<img src="man/figures/logo_plotunmarked.png" width="250" />
+<div style="margin-left: 20px;">
+  <img src="man/figures/logo_plotunmarked.png" width="270" />
+</div>
 
-</td>
-</tr>
-</table>
+</div>
 
 
 ## Installation
@@ -64,7 +80,9 @@ if (requireNamespace("unmarked", quietly = TRUE)) {
   )
 }
 ```
+<p align="center">
 <img src="man/figures/cov_plot.png" width="60%" />
+</p>
 
 A similar plot can be made for model-averaged coefficient using the `plot_modavg_response()` function.
 
@@ -121,7 +139,9 @@ psi_map <- occupancy_map(
   plot_filename = "occupancy_map_top"  # if save_plot = TRUE
 )
 ```
+<p align="center">
 <img src="man/figures/top_psi_map.png" width="60%" />
+</p>
 
 ### Plot predicted occupancy map using model-averaged coefficients
 
@@ -144,7 +164,9 @@ psi_map_ma <- modavg_occupancy_map(
   plot_format = "png"                      # plot format (also avaiable as "jpeg" and "tif"
 )
 ```
+<p align="center">
 <img src="man/figures/modavg_psi_map.png" width="60%" />
+</p>
 
 ### ROC curve and AUC to validate prediction
 
@@ -159,8 +181,9 @@ auc_modavg_plot(
   detection_history = detn            # if use_detection = TRUE, supply detection matrix
 ) 
 ```
-
+<p align="center">
 <img src="man/figures/auc_plot.png" width="60%" />
+</p>
 
 This work is in progress. If you have any questions or discover bugs, please report to ugyenpenjor.bt@gmail.com. 
 
