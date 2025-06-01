@@ -145,3 +145,9 @@ This work is in progress. If you have any questions or discover bugs, please rep
 To cite package `plotunmarked` in publications use:
 
 Penjor, Ugyen (2025). _plotunmarked: Utility Tools for Visualising `unmarked` Package Models_. R package version 0.1.0. Available at: https://github.com/ugyenpenjor1/plotunmarked
+
+OR
+
+```r
+citation("plotunmarked")
+```
