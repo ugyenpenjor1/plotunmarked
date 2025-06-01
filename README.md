@@ -27,25 +27,50 @@
 
 <!-- </table> -->
 
-<div style="display: flex; align-items: flex-start; justify-content: space-between;">
+<table>
 
-<div style="flex: 1;">
+<tr>
 
-# plotunmarked
+<td style="width: 80%; border: none;">
 
-The goal of **plotunmarked** is to provide convenient plotting functions
-for visualising predictions from unmarked models, particularly occupancy
-estimates — a quick and dirty approach!
+<h1>
 
-</div>
+plotunmarked
+</h1>
 
-<div style="margin-left: 20px;">
+The goal of <strong>plotunmarked</strong> is to provide convenient
+plotting functions for visualising predictions from unmarked models,
+particularly occupancy estimates – a quick and dirty approach!
 
-<img src="man/figures/logo_plotunmarked.png" width="270" />
+</td>
 
-</div>
+<td style="border: none; text-align: right;">
 
-</div>
+<img src="man/figures/logo_plotunmarked.png" width="270">
+
+</td>
+
+</tr>
+
+</table>
+
+<!-- <div style="display: flex; align-items: flex-start; justify-content: space-between;"> -->
+
+<!-- <div style="flex: 1;"> -->
+
+<!-- # plotunmarked -->
+
+<!-- The goal of **plotunmarked** is to provide convenient plotting functions for visualising predictions from unmarked models, particularly occupancy estimates — a quick and dirty approach! -->
+
+<!-- </div> -->
+
+<!-- <div style="margin-left: 20px;"> -->
+
+<!--   <img src="man/figures/logo_plotunmarked.png" width="270" /> -->
+
+<!-- </div> -->
+
+<!-- </div> -->
 
 ## Installation
 

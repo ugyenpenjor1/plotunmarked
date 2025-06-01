@@ -32,21 +32,39 @@ knitr::opts_chunk$set(
 <!-- </tr> -->
 <!-- </table> -->
 
-<div style="display: flex; align-items: flex-start; justify-content: space-between;">
+<table>
+<tr>
+<td style="width: 80%; border: none;">
 
-<div style="flex: 1;">
+<h1>plotunmarked</h1>
 
-# plotunmarked
+The goal of <strong>plotunmarked</strong> is to provide convenient plotting functions for visualising predictions from unmarked models, particularly occupancy estimates – a quick and dirty approach!
 
-The goal of **plotunmarked** is to provide convenient plotting functions for visualising predictions from unmarked models, particularly occupancy estimates — a quick and dirty approach!
+</td>
+<td style="border: none; text-align: right;">
 
-</div>
+<img src="man/figures/logo_plotunmarked.png" width="270">
 
-<div style="margin-left: 20px;">
-  <img src="man/figures/logo_plotunmarked.png" width="270" />
-</div>
+</td>
+</tr>
+</table>
 
-</div>
+
+<!-- <div style="display: flex; align-items: flex-start; justify-content: space-between;"> -->
+
+<!-- <div style="flex: 1;"> -->
+
+<!-- # plotunmarked -->
+
+<!-- The goal of **plotunmarked** is to provide convenient plotting functions for visualising predictions from unmarked models, particularly occupancy estimates — a quick and dirty approach! -->
+
+<!-- </div> -->
+
+<!-- <div style="margin-left: 20px;"> -->
+<!--   <img src="man/figures/logo_plotunmarked.png" width="270" /> -->
+<!-- </div> -->
+
+<!-- </div> -->
 
 
 ## Installation
