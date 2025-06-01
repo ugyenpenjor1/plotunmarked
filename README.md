@@ -27,7 +27,7 @@
 
 <!-- </table> -->
 
-<table>
+<table style="border-color: transparent;">
 
 <tr>
 
@@ -44,9 +44,9 @@ particularly occupancy estimates – a quick and dirty approach!
 
 </td>
 
-<td style="border: none; text-align: right;">
+<td style="border: 1px solid transparent; text-align: right;">
 
-<img src="man/figures/logo_plotunmarked.png" width="270">
+<img src="man/figures/logo_plotunmarked.png" width="290">
 
 </td>
 
