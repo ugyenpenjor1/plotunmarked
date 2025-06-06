@@ -201,6 +201,10 @@ occupancy_map <- function(
 
   # Plotting
   if (plot_map) {
+    # Convert to terra::SpatRaster for plotting only
+    plot_mean <- if (inherits(psi_mean, "SpatRaster")) psi_mean else terra::rast(psi_mean)
+    plot_se <- if (inherits(psi_se, "SpatRaster")) psi_se else terra::rast(psi_se)
+
     # Convert rasters to data frames
     df_mean <- as.data.frame(psi_mean, xy = TRUE, na.rm = TRUE)
     names(df_mean)[3] <- "value"
@@ -213,6 +217,10 @@ occupancy_map <- function(
     plot_df <- rbind(df_mean, df_se)
 
     if (plot_ci) {
+      # Convert to terra::SpatRaster for plotting only
+      plot_lower <- if (inherits(psi_lower, "SpatRaster")) psi_lower else terra::rast(psi_lower)
+      plot_upper <- if (inherits(psi_upper, "SpatRaster")) psi_upper else terra::rast(psi_upper)
+
       df_lower <- as.data.frame(psi_lower, xy = TRUE, na.rm = TRUE)
       names(df_lower)[3] <- "value"
       df_lower$type <- paste0(ci_level * 100, "% CI - lower")
