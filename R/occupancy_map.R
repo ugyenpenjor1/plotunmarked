@@ -173,7 +173,7 @@ occupancy_map <- function (
 
   # Compute mean and SE on probability scale
   psi_mean <- 1 / (1 + exp(-logitPsi))
-  psi_se <- (exp(-logitPsi)/(1 + exp(-logitPsi))^2) * sqrt(var_logitPsi)
+  psi_se <- (exp(-logitPsi) / (1 + exp(-logitPsi))^2) * sqrt(var_logitPsi)
 
   if (plot_ci) {
     z_val <- qnorm(1 - (1 - ci_level) / 2)
@@ -206,14 +206,14 @@ occupancy_map <- function (
   # Plotting
   if (plot_map) {
     # Convert to terra::SpatRaster for plotting only
-    plot_mean <- if (inherits(psi_mean, "SpatRaster")) psi_mean else terra::rast(psi_mean)
-    plot_se <- if (inherits(psi_se, "SpatRaster")) psi_se else terra::rast(psi_se)
+    #plot_mean <- if (inherits(psi_mean, "SpatRaster")) psi_mean else terra::rast(psi_mean)
+    #plot_se <- if (inherits(psi_se, "SpatRaster")) psi_se else terra::rast(psi_se)
 
-    df_mean <- as.data.frame(psi_mean, xy = TRUE, na.rm = TRUE)
+    df_mean <- as.data.frame(terra::rast(psi_mean), xy = TRUE, na.rm = TRUE)
     names(df_mean)[3] <- "value"
     df_mean$type <- "Predicted occupancy (mean)"
 
-    df_se <- as.data.frame(psi_se, xy = TRUE, na.rm = TRUE)
+    df_se <- as.data.frame(terra::rast(psi_se), xy = TRUE, na.rm = TRUE)
     names(df_se)[3] <- "value"
     df_se$type <- "Standard error"
 
@@ -221,14 +221,14 @@ occupancy_map <- function (
 
     if (plot_ci) {
       # Convert to terra::SpatRaster for plotting only
-      plot_lower <- if (inherits(psi_lower, "SpatRaster")) psi_lower else terra::rast(psi_lower)
-      plot_upper <- if (inherits(psi_upper, "SpatRaster")) psi_upper else terra::rast(psi_upper)
+      #plot_lower <- if (inherits(psi_lower, "SpatRaster")) psi_lower else terra::rast(psi_lower)
+      #plot_upper <- if (inherits(psi_upper, "SpatRaster")) psi_upper else terra::rast(psi_upper)
 
-      df_lower <- as.data.frame(psi_lower, xy = TRUE, na.rm = TRUE)
+      df_lower <- as.data.frame(terra::rast(psi_lower), xy = TRUE, na.rm = TRUE)
       names(df_lower)[3] <- "value"
       df_lower$type <- paste0(ci_level * 100, "% CI - lower")
 
-      df_upper <- as.data.frame(psi_upper, xy = TRUE, na.rm = TRUE)
+      df_upper <- as.data.frame(terra::rast(psi_upper), xy = TRUE, na.rm = TRUE)
       names(df_upper)[3] <- "value"
       df_upper$type <- paste0(ci_level * 100, "% CI - upper")
 
