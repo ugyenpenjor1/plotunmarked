@@ -15,7 +15,6 @@
 plot_occupancy <- function(model, covariate, fixed_vals = NULL, xlab = NULL, ci_level = 0.95) {
   if (!inherits(model, "unmarkedFit")) stop("Model must be of class 'unmarkedFit'")
   if (!is.character(covariate) || length(covariate) != 1) stop("covariate must be a single character string")
-  if (!is.numeric(ci_level) || ci_level <= 0 || ci_level >= 1) stop("ci_level must be a number between 0 and 1")
 
   model_data <- model@data@siteCovs
 
@@ -24,11 +23,14 @@ plot_occupancy <- function(model, covariate, fixed_vals = NULL, xlab = NULL, ci_
   }
 
   cov_range <- range(model_data[[covariate]], na.rm = TRUE)
-
   pred_vals <- seq(cov_range[1], cov_range[2], by = 0.1)
   newdata <- data.frame(pred_vals)
-  names(newdata) <- covariate
 
+  # Rename to match covariate
+  newdata[[covariate]] <- newdata$pred_vals
+  newdata$pred_vals <- NULL
+
+  # Fix other covariates
   other_covs <- setdiff(colnames(model_data), covariate)
   for (cov in other_covs) {
     newdata[[cov]] <- if (!is.null(fixed_vals) && cov %in% names(fixed_vals)) {
@@ -38,21 +40,14 @@ plot_occupancy <- function(model, covariate, fixed_vals = NULL, xlab = NULL, ci_
     }
   }
 
-  z <- qnorm(1 - (1 - ci_level) / 2)
+  # Ask for desired CI level
+  occ_prob <- predict(model, type = "state", newdata = newdata, level = ci_level)
+  pred <- as.data.frame(occ_prob)
 
-  # Get predictions on the link scale
-  pred_link <- unmarked::predict(model, type = "state", newdata = newdata, appendData = TRUE)
-
-  # Calculate transformed CIs
-  pred <- transform(
-    pred_link,
-    lower = plogis(qlogis(Predicted) - z * SE),
-    upper = plogis(qlogis(Predicted) + z * SE)
-  )
+  # Add covariate column back to pred (from newdata)
+  pred[[covariate]] <- newdata[[covariate]]
 
   cov_sym <- rlang::sym(covariate)
-
-  # Use custom x-axis label if provided
   x_label <- if (!is.null(xlab)) xlab else paste0(covariate, " (standardised)")
 
   p <- ggplot2::ggplot(pred) +
