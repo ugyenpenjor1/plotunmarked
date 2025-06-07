@@ -56,8 +56,7 @@
 #' result <- occupancy_map(model = mod, covariate_rasters = covariate_rasters)
 #' }
 
-
-occupancy_map <- function(
+occupancy_map <- function (
     model,
     covariate_rasters,
     return_class = c("same", "terra", "raster"),
@@ -67,7 +66,7 @@ occupancy_map <- function(
     save_plot = FALSE,
     plot_filename = "occupancy_map",
     plot_format = "png"
-) {
+  ) {
   return_class <- match.arg(return_class)
 
   if (!inherits(model, "unmarkedFit")) {
@@ -78,7 +77,7 @@ occupancy_map <- function(
     stop("`covariate_rasters` must be a named list of rasters with names matching model covariates.")
   }
 
-  # # Extract coefficients and VCV matrix
+  # Extract coefficients and VCV matrix
   beta <- unmarked::coef(model)
   vcov_mat <- unmarked::vcov(model)
 
@@ -88,11 +87,15 @@ occupancy_map <- function(
 
   # Check covariate raster names match
   # Ignore intercept ("Int") when checking for covariate rasters
-  missing_covs <- setdiff(setdiff(model_covariate_names, "Int"), names(covariate_rasters))
+  missing_covs <- setdiff(setdiff(model_covariate_names, "Int"),
+                          names(covariate_rasters))
+
   if (length(missing_covs) > 0) {
-    stop("Missing raster(s) for the following model covariates: ", paste(missing_covs, collapse = ", "))
+    stop("Missing raster(s) for the following model covariates: ",
+         paste(missing_covs, collapse = ", "))
   } else {
-    message("Raster list names match model covariates: ", paste(model_covariate_names, collapse = ", "))
+    message("Raster list names match model covariates: ",
+            paste(model_covariate_names, collapse = ", "))
   }
 
   coef_names <- names(psi_coefs)
@@ -108,7 +111,8 @@ occupancy_map <- function(
     if (cov == "Int") {
       # Intercept: create constant raster
       base_raster <- covariate_rasters[[1]]
-      if (inherits(base_raster, "Raster")) base_raster <- terra::rast(base_raster)
+      if (inherits(base_raster, "Raster"))
+        base_raster <- terra::rast(base_raster)
       return(base_raster * 0 + 1)
     } else {
       rast <- covariate_rasters[[cov]]
@@ -169,9 +173,8 @@ occupancy_map <- function(
 
   # Compute mean and SE on probability scale
   psi_mean <- 1 / (1 + exp(-logitPsi))
-  psi_se <- (exp(-logitPsi) / (1 + exp(-logitPsi))^2) * sqrt(var_logitPsi)
+  psi_se <- (exp(-logitPsi)/(1 + exp(-logitPsi))^2) * sqrt(var_logitPsi)
 
-  # CI bounds
   if (plot_ci) {
     z_val <- qnorm(1 - (1 - ci_level) / 2)
     lower_logit <- logitPsi - z_val * sqrt(var_logitPsi)
@@ -194,6 +197,7 @@ occupancy_map <- function(
 
   psi_mean <- convert_rast(psi_mean)
   psi_se <- convert_rast(psi_se)
+
   if (plot_ci) {
     psi_lower <- convert_rast(psi_lower)
     psi_upper <- convert_rast(psi_upper)
@@ -205,7 +209,6 @@ occupancy_map <- function(
     plot_mean <- if (inherits(psi_mean, "SpatRaster")) psi_mean else terra::rast(psi_mean)
     plot_se <- if (inherits(psi_se, "SpatRaster")) psi_se else terra::rast(psi_se)
 
-    # Convert rasters to data frames
     df_mean <- as.data.frame(psi_mean, xy = TRUE, na.rm = TRUE)
     names(df_mean)[3] <- "value"
     df_mean$type <- "Predicted occupancy (mean)"
@@ -243,7 +246,7 @@ occupancy_map <- function(
       )
     )
 
-    # Create ggplot
+    # Create plot
     p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = y, fill = value)) +
       ggplot2::geom_raster() +
       ggplot2::scale_fill_viridis_c(
@@ -255,7 +258,7 @@ occupancy_map <- function(
       ggplot2::coord_equal() +
       ggplot2::theme_minimal() +
       ggplot2::labs(fill = NULL, x = NULL, y = NULL) +
-      ggplot2::facet_wrap(~ type, ncol = 2) +
+      ggplot2::facet_wrap(~type, ncol = 2) +
       ggplot2::theme(
         panel.background = ggplot2::element_rect(fill = "white", colour = "grey50"),
         axis.text.y = ggplot2::element_text(angle = 90, vjust = 0, hjust = 0.5)
@@ -279,6 +282,7 @@ occupancy_map <- function(
 
   # Output
   result <- list(mean = psi_mean, se = psi_se)
+
   if (plot_ci) {
     result$lower <- psi_lower
     result$upper <- psi_upper
