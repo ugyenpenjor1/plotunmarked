@@ -10,7 +10,8 @@ plot_modavg_response(
   covariate,
   fixed_vals = NULL,
   response_type = c("state", "det"),
-  xlab = NULL
+  xlab = NULL,
+  ci_level = 0.95
 )
 }
 \arguments{
