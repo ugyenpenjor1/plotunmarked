@@ -4,7 +4,13 @@
 \alias{plot_occupancy}
 \title{Plot occupancy estimates against a continuous covariate}
 \usage{
-plot_occupancy(model, covariate, fixed_vals = NULL, xlab = NULL)
+plot_occupancy(
+  model,
+  covariate,
+  fixed_vals = NULL,
+  xlab = NULL,
+  ci_level = 0.95
+)
 }
 \arguments{
 \item{model}{An object of class \code{unmarkedFit}, typically the result of fitting a model using the \code{unmarked} package.}

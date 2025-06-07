@@ -12,9 +12,10 @@
 #' @return A \code{ggplot} object showing the predicted occupancy probabilities with confidence intervals.
 #' @export
 
-plot_occupancy <- function(model, covariate, fixed_vals = NULL, xlab = NULL) {
+plot_occupancy <- function(model, covariate, fixed_vals = NULL, xlab = NULL, ci_level = 0.95) {
   if (!inherits(model, "unmarkedFit")) stop("Model must be of class 'unmarkedFit'")
   if (!is.character(covariate) || length(covariate) != 1) stop("covariate must be a single character string")
+  if (!is.numeric(ci_level) || ci_level <= 0 || ci_level >= 1) stop("ci_level must be a number between 0 and 1")
 
   model_data <- model@data@siteCovs
 
@@ -37,8 +38,17 @@ plot_occupancy <- function(model, covariate, fixed_vals = NULL, xlab = NULL) {
     }
   }
 
-  occ_prob <- predict(model, type = "state", newdata = newdata, appendData = TRUE)
-  pred <- as.data.frame(occ_prob)
+  z <- qnorm(1 - (1 - ci_level) / 2)
+
+  # Get predictions on the link scale
+  pred_link <- unmarked::predict(model, type = "state", newdata = newdata, appendData = TRUE)
+
+  # Calculate transformed CIs
+  pred <- transform(
+    pred_link,
+    lower = plogis(qlogis(Predicted) - z * SE),
+    upper = plogis(qlogis(Predicted) + z * SE)
+  )
 
   cov_sym <- rlang::sym(covariate)
 
