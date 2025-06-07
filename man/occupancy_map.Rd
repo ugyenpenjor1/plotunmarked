@@ -2,7 +2,7 @@
 % Please edit documentation in R/occupancy_map.R
 \name{occupancy_map}
 \alias{occupancy_map}
-\title{Predict and visualise occupancy from an unmarked model}
+\title{Predict and visualise occupancy (map) from an unmarked model}
 \usage{
 occupancy_map(
   model,

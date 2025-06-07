@@ -1,4 +1,4 @@
-#' Predict and visualise occupancy from an unmarked model
+#' Predict and visualise occupancy (map) from an unmarked model
 #'
 #' Computes spatial predictions of occupancy probabilities from a fitted `unmarkedFit` model and raster covariates. Optionally plots the map and saves it to a file.
 #'
