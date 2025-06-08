@@ -5,6 +5,8 @@
 #' from a fitted `unmarked` occupancy model (class `unmarkedFitOccu`).
 #' This function creates a prediction grid over the range of two covariates, makes predictions in chunks
 #' to improve performance, and visualises the interaction using a color gradient.
+#' Useful for visualising how two site-level covariates jointly affect
+#' occupancy probability while holding other covariates constant.
 #'
 #' @param model A fitted `unmarkedFitOccu` model object created using `unmarked::occu()`.
 #' @param cov1 A character string indicating the first covariate involved in the interaction (x-axis).
@@ -14,6 +16,7 @@
 #' @param palette Character. Name of the color palette to use for the gradient. Must be compatible with `hcl.colors()`.
 #'        Default is `"cividis"`. If `NULL`, uses `"cividis"` as fallback.
 #' @param xlab Optional character string to override the x-axis label. Defaults to the name of `cov1`.
+#' @param nonInt_cov Named list. Optional. Values to supply for additional site-level covariates not in the interaction. If not provided, these covariates will be filled using their median from the training data.
 #'
 #' @return A `ggplot2` plot object showing predicted occupancy across a grid of `cov1` and `cov2` values.
 #'
@@ -30,22 +33,24 @@
 #'   n_visits <- 3
 #'   site_covs <- data.frame(
 #'     elev = scale(rnorm(n_sites)),
-#'     forest = scale(rnorm(n_sites))
+#'     forest = scale(rnorm(n_sites)),
+#'     river = scale(rnorm(n_sites))
 #'   )
 #'   obs_covs <- list(effort_s = matrix(rnorm(n_sites * n_visits), n_sites, n_visits))
 #'   y <- matrix(rbinom(n_sites * n_visits, 1, 0.5), n_sites, n_visits)
 #'
 #'   umf <- unmarked::unmarkedFrameOccu(y = y, siteCovs = site_covs, obsCovs = obs_covs)
-#'   mod <- unmarked::occu(~ effort_s ~ elev * forest, data = umf)
+#'   mod <- unmarked::occu(~ effort_s ~ river + elev * forest, data = umf)
 #'
 #'   # Plot interaction surface
-#'   plot <- plot_interaction_surface1(
+#'   plot <- plot_occupancy_interaction(
 #'     model = mod,
 #'     cov1 = "elev",
 #'     cov2 = "forest",
 #'     grid_length = 100,
 #'     chunk_size = 5000,
-#'     xlab = "elev"
+#'     xlab = "elev",
+#'     nonInt_cov = list(river = 0)
 #'   )
 #'   print(plot)
 #' }
@@ -58,10 +63,10 @@ plot_occupancy_interaction <- function(
     cov2,
     grid_length = 400,
     chunk_size = 50000,
-    palette = NULL,  # palette is optional; uses "cividis" by default
-    xlab = NULL
+    palette = NULL,
+    xlab = NULL,
+    nonInt_cov = list()
 ) {
-
   # Extract site-level covariates
   site_covs <- model@data@siteCovs
 
@@ -92,26 +97,34 @@ plot_occupancy_interaction <- function(
     total = length(chunks), clear = FALSE, width = 60
   )
 
-  # All site-level covariate names from the original model
+  # All site-level covariate names from the model
   all_covs <- names(site_covs)
 
   for (i in seq_along(chunks)) {
     chunk_data <- chunks[[i]]
 
-    # Find any covariates that are missing from the chunk of the prediction grid
-    # Fill in missing covariates with numeric NA
+    # Fill in missing covariates
     missing_covs <- setdiff(all_covs, names(chunk_data))
     for (var in missing_covs) {
-      chunk_data[[var]] <- NA_real_   # a missing numeric NA
+      if (var %in% names(nonInt_cov)) {
+        chunk_data[[var]] <- nonInt_cov[[var]]
+      } else {
+        # fallback to median value from training data
+        chunk_data[[var]] <- median(site_covs[[var]], na.rm = TRUE)
+      }
     }
 
-    # Match column order to model
+    # Ensure column order matches the model
     chunk_data <- chunk_data[all_covs]
 
-    # Predict state (occupancy)
-    preds <- unmarked::predict(model, type = "state", newdata = chunk_data, appendData = FALSE)$Predicted
-    grid$psi[as.numeric(rownames(chunk_data))] <- preds
+    preds <- unmarked::predict(
+      model,
+      type = "state",
+      newdata = chunk_data,
+      appendData = FALSE
+    )$Predicted
 
+    grid$psi[as.numeric(rownames(chunk_data))] <- preds
     pb$tick()
   }
 
@@ -122,10 +135,8 @@ plot_occupancy_interaction <- function(
     hcl.colors(256, palette)
   }
 
-  # Use provided or default x-axis label
   x_label <- if (is.null(xlab)) cov1 else xlab
 
-  # Plot
   p <- ggplot2::ggplot(
     grid,
     ggplot2::aes(
@@ -135,7 +146,7 @@ plot_occupancy_interaction <- function(
       colour = .data[[cov2]]
     )
   ) +
-    ggplot2::geom_line(linewidth = 0.5, alpha = 0.8) +
+    ggplot2::geom_line(linewidth = 0.5, alpha = 0.8, na.rm = TRUE) +
     ggplot2::scale_colour_gradientn(
       colours = col_palette,
       name = cov2

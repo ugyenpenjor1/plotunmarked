@@ -11,7 +11,8 @@ plot_occupancy_interaction(
   grid_length = 400,
   chunk_size = 50000,
   palette = NULL,
-  xlab = NULL
+  xlab = NULL,
+  nonInt_cov = list()
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ plot_occupancy_interaction(
 Default is \code{"cividis"}. If \code{NULL}, uses \code{"cividis"} as fallback.}
 
 \item{xlab}{Optional character string to override the x-axis label. Defaults to the name of \code{cov1}.}
+
+\item{nonInt_cov}{Named list. Optional. Values to supply for additional site-level covariates not in the interaction. If not provided, these covariates will be filled using their median from the training data.}
 }
 \value{
 A \code{ggplot2} plot object showing predicted occupancy across a grid of \code{cov1} and \code{cov2} values.
@@ -38,6 +41,8 @@ Generates an interaction surface plot of occupancy probability for two interacti
 from a fitted \code{unmarked} occupancy model (class \code{unmarkedFitOccu}).
 This function creates a prediction grid over the range of two covariates, makes predictions in chunks
 to improve performance, and visualises the interaction using a color gradient.
+Useful for visualising how two site-level covariates jointly affect
+occupancy probability while holding other covariates constant.
 }
 \examples{
 if (requireNamespace("unmarked", quietly = TRUE)) {
@@ -47,22 +52,24 @@ if (requireNamespace("unmarked", quietly = TRUE)) {
   n_visits <- 3
   site_covs <- data.frame(
     elev = scale(rnorm(n_sites)),
-    forest = scale(rnorm(n_sites))
+    forest = scale(rnorm(n_sites)),
+    river = scale(rnorm(n_sites))
   )
   obs_covs <- list(effort_s = matrix(rnorm(n_sites * n_visits), n_sites, n_visits))
   y <- matrix(rbinom(n_sites * n_visits, 1, 0.5), n_sites, n_visits)
 
   umf <- unmarked::unmarkedFrameOccu(y = y, siteCovs = site_covs, obsCovs = obs_covs)
-  mod <- unmarked::occu(~ effort_s ~ elev * forest, data = umf)
+  mod <- unmarked::occu(~ effort_s ~ river + elev * forest, data = umf)
 
   # Plot interaction surface
-  plot <- plot_interaction_surface1(
+  plot <- plot_occupancy_interaction(
     model = mod,
     cov1 = "elev",
     cov2 = "forest",
     grid_length = 100,
     chunk_size = 5000,
-    xlab = "elev"
+    xlab = "elev",
+    nonInt_cov = list(river = 0)
   )
   print(plot)
 }
