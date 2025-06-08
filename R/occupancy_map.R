@@ -56,6 +56,7 @@
 #' result <- occupancy_map(model = mod, covariate_rasters = covariate_rasters)
 #' }
 
+
 occupancy_map <- function (
     model,
     covariate_rasters,
@@ -67,6 +68,7 @@ occupancy_map <- function (
     plot_filename = "occupancy_map",
     plot_format = "png"
   ) {
+
   return_class <- match.arg(return_class)
 
   if (!inherits(model, "unmarkedFit")) {
@@ -87,8 +89,7 @@ occupancy_map <- function (
 
   # Check covariate raster names match
   # Ignore intercept ("Int") when checking for covariate rasters
-  missing_covs <- setdiff(setdiff(model_covariate_names, "Int"),
-                          names(covariate_rasters))
+  missing_covs <- setdiff(setdiff(model_covariate_names, "Int"), names(covariate_rasters))
 
   if (length(missing_covs) > 0) {
     stop("Missing raster(s) for the following model covariates: ",
@@ -101,37 +102,32 @@ occupancy_map <- function (
   coef_names <- names(psi_coefs)
   beta_vec <- psi_coefs
 
-  # Extract relevant VCV matrix
+  # Extract relevant vcv matrix
   beta_idx <- grep("^psi\\(", rownames(vcov_mat))
   V_sub <- vcov_mat[beta_idx, beta_idx]
   rownames(V_sub) <- colnames(V_sub) <- model_covariate_names
 
-  # Create raster stack of covariates (suppor both terra and raster)
+  # Create raster stack of covariates (supports both terra and raster)
   X_stack <- terra::rast(lapply(coef_names, function(cov) {
     if (cov == "Int") {
-      # Intercept: create constant raster
+      # Intercept: create constant raster (just dummy for plotting convenience)
       base_raster <- covariate_rasters[[1]]
-      if (inherits(base_raster, "Raster"))
-        base_raster <- terra::rast(base_raster)
+      if (inherits(base_raster, "Raster")) base_raster <- terra::rast(base_raster)
       return(base_raster * 0 + 1)
     } else {
       rast <- covariate_rasters[[cov]]
       if (!inherits(rast, c("SpatRaster", "RasterLayer"))) {
         stop(sprintf("Raster for '%s' must be SpatRaster or RasterLayer.", cov))
       }
-      if (inherits(rast, "Raster")) {
-        rast <- terra::rast(rast)
-      }
+      if (inherits(rast, "Raster")) rast <- terra::rast(rast)
       return(rast)
     }
   }))
+
   names(X_stack) <- coef_names
 
   # Check raster consistency
   for (cov in setdiff(coef_names, "Int")) {
-    if (!(cov %in% names(covariate_rasters))) {
-      stop("Missing raster for covariate: ", cov)
-    }
     r <- covariate_rasters[[cov]]
     if (inherits(r, "SpatRaster")) {
       if (terra::global(r, fun = function(x) sum(!is.na(x)))[1, 1] == 0) {
@@ -145,9 +141,7 @@ occupancy_map <- function (
   }
 
   # Compute logit prediction
-  logitPsi <- terra::app(X_stack, fun = function(x_row) {
-    sum(x_row * beta_vec)
-  })
+  logitPsi <- terra::app(X_stack, fun = function(x_row) sum(x_row * beta_vec))
 
   message("Preparing your map...")
 
@@ -179,7 +173,6 @@ occupancy_map <- function (
     z_val <- qnorm(1 - (1 - ci_level) / 2)
     lower_logit <- logitPsi - z_val * sqrt(var_logitPsi)
     upper_logit <- logitPsi + z_val * sqrt(var_logitPsi)
-
     psi_lower <- 1 / (1 + exp(-lower_logit))
     psi_upper <- 1 / (1 + exp(-upper_logit))
   }
@@ -203,57 +196,48 @@ occupancy_map <- function (
     psi_upper <- convert_rast(psi_upper)
   }
 
-  # Plotting
-  if (plot_map) {
-    # Convert to terra::SpatRaster for plotting only
-    #plot_mean <- if (inherits(psi_mean, "SpatRaster")) psi_mean else terra::rast(psi_mean)
-    #plot_se <- if (inherits(psi_se, "SpatRaster")) psi_se else terra::rast(psi_se)
+  # raster-to-dataframe conversion
+  safe_as_df <- function(r) {
+    if (inherits(r, "Raster")) r <- terra::rast(r)
+    as.data.frame(r, xy = TRUE, na.rm = TRUE)
+  }
 
-    df_mean <- as.data.frame(terra::rast(psi_mean), xy = TRUE, na.rm = TRUE)
+  # Do the plot
+  if (plot_map) {
+    df_mean <- safe_as_df(psi_mean)
     names(df_mean)[3] <- "value"
     df_mean$type <- "Predicted occupancy (mean)"
 
-    df_se <- as.data.frame(terra::rast(psi_se), xy = TRUE, na.rm = TRUE)
+    df_se <- safe_as_df(psi_se)
     names(df_se)[3] <- "value"
     df_se$type <- "Standard error"
 
     plot_df <- rbind(df_mean, df_se)
 
     if (plot_ci) {
-      # Convert to terra::SpatRaster for plotting only
-      #plot_lower <- if (inherits(psi_lower, "SpatRaster")) psi_lower else terra::rast(psi_lower)
-      #plot_upper <- if (inherits(psi_upper, "SpatRaster")) psi_upper else terra::rast(psi_upper)
-
-      df_lower <- as.data.frame(terra::rast(psi_lower), xy = TRUE, na.rm = TRUE)
+      df_lower <- safe_as_df(psi_lower)
       names(df_lower)[3] <- "value"
       df_lower$type <- paste0(ci_level * 100, "% CI - lower")
 
-      df_upper <- as.data.frame(terra::rast(psi_upper), xy = TRUE, na.rm = TRUE)
+      df_upper <- safe_as_df(psi_upper)
       names(df_upper)[3] <- "value"
       df_upper$type <- paste0(ci_level * 100, "% CI - upper")
 
       plot_df <- rbind(plot_df, df_lower, df_upper)
     }
 
-    # Reorder facet levels
-    plot_df$type <- factor(
-      plot_df$type,
-      levels = c(
-        "Predicted occupancy (mean)",
-        "Standard error",
-        paste0(ci_level * 100, "% CI - lower"),
-        paste0(ci_level * 100, "% CI - upper")
-      )
-    )
+    # Reorder facet labels
+    plot_df$type <- factor(plot_df$type, levels = c(
+      "Predicted occupancy (mean)", "Standard error",
+      paste0(ci_level * 100, "% CI - lower"),
+      paste0(ci_level * 100, "% CI - upper")
+    ))
 
-    # Create plot
     p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = y, fill = value)) +
       ggplot2::geom_raster() +
       ggplot2::scale_fill_viridis_c(
-        name = "Occupancy\nprobability",
-        option = "viridis",
-        na.value = "transparent",
-        limits = c(0, 1)
+        name = "Occupancy\nprobability", option = "viridis",
+        na.value = "transparent", limits = c(0, 1)
       ) +
       ggplot2::coord_equal() +
       ggplot2::theme_minimal() +
@@ -270,12 +254,8 @@ occupancy_map <- function (
     if (save_plot) {
       ggplot2::ggsave(
         filename = paste0(plot_filename, ".", tolower(plot_format)),
-        plot = p,
-        width = 10,
-        height = if (plot_ci) 8 else 5,
-        dpi = 300,
-        bg = "white",
-        device = plot_format
+        plot = p, width = 10, height = if (plot_ci) 8 else 5,
+        dpi = 300, bg = "white", device = plot_format
       )
     }
   }
