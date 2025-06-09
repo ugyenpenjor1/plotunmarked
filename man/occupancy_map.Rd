@@ -19,9 +19,13 @@ occupancy_map(
 \arguments{
 \item{model}{A fitted model of class \code{unmarkedFit}, typically from the \code{unmarked} package.}
 
-\item{covariate_rasters}{A named list of raster covariates (\code{SpatRaster} or \code{RasterLayer}), where names match the occupancy covariates used in the model. The list must include all covariates used in the model, excluding the intercept.}
+\item{covariate_rasters}{A named list of raster covariates (\code{SpatRaster} or \code{RasterLayer}),
+where names match the occupancy covariates used in the model. The list must
+include all covariates used in the model, excluding the intercept.}
 
-\item{return_class}{Character. Specifies the class of raster returned. Options are \code{"same"} (default, returns the same class as input), \code{"terra"} (returns \code{SpatRaster}), or \code{"raster"} (returns \code{RasterLayer}).}
+\item{return_class}{Character. Specifies the class of raster returned.
+Options are \code{"same"} (default, returns the same class as input),
+\code{"terra"} (returns \code{SpatRaster}), or \code{"raster"} (returns \code{RasterLayer}).}
 
 \item{plot_map}{Logical. If \code{TRUE} (default), plots the predicted occupancy map and uncertainty layers.}
 
@@ -45,19 +49,28 @@ A (named) list of raster objects containing:
 All returned raster layers match the format specified by \code{return_class}.
 }
 \description{
-Computes spatial predictions of occupancy probabilities from a fitted \code{unmarkedFit} model and raster covariates. Optionally plots the map and saves it to a file.
+Computes and visualises spatial predictions of occupancy probabilities from
+a fitted \code{unmarkedFit} model and raster covariates. Supports interaction
+terms and returns mean predictions, standard errors and confidence intervals.
+Optionally plots the map and saves it to a file.
 }
 \details{
-The function uses model coefficients and their variance-covariance matrix to generate occupancy predictions across a spatial surface defined by the input covariate rasters. The intercept term is handled internally by generating a constant raster. Variance propagation is performed via the delta method.
+This function supports main effects and interaction terms of the
+form \code{var1:var2}. The function uses model coefficients and their
+variance-covariance matrix to generate occupancy predictions across a spatial
+surface defined by the input covariate rasters. The intercept term is handled
+internally by generating a constant raster. Variance propagation is performed
+via the delta method.
 
-If \code{plot_map = TRUE}, the function creates a \code{ggplot2}-based map visualising the predicted occupancy, standard error, and optionally, the confidence interval bounds. Plots are saved using \code{ggsave()} if \code{save_plot = TRUE}.
-
-A progress bar is shown during uncertainty calculation if the \code{pbapply} package is installed.
+Internally, the function computes the linear predictor on the logit scale,
+applies the inverse logit to obtain occupancy probabilities, and uses the
+delta method to estimate the standard error. Confidence intervals are
+computed using the normal approximation if \code{plot_ci = TRUE}.
 }
 \examples{
 \dontrun{
 library(unmarked)
-library(terra)
+library(terra) # also supports library(raster)
 
 # Fit a simple model (example assumes you have data in unmarkedFrame)
 umf <- unmarkedFrameOccu(y = matrix(sample(0:1, 100, TRUE), ncol = 5),

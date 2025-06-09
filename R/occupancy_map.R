@@ -1,10 +1,17 @@
 #' Predict and visualise occupancy (map) from an unmarked model
 #'
-#' Computes spatial predictions of occupancy probabilities from a fitted `unmarkedFit` model and raster covariates. Optionally plots the map and saves it to a file.
+#' Computes and visualises spatial predictions of occupancy probabilities from
+#' a fitted `unmarkedFit` model and raster covariates. Supports interaction
+#' terms and returns mean predictions, standard errors and confidence intervals.
+#' Optionally plots the map and saves it to a file.
 #'
 #' @param model A fitted model of class `unmarkedFit`, typically from the `unmarked` package.
-#' @param covariate_rasters A named list of raster covariates (`SpatRaster` or `RasterLayer`), where names match the occupancy covariates used in the model. The list must include all covariates used in the model, excluding the intercept.
-#' @param return_class Character. Specifies the class of raster returned. Options are `"same"` (default, returns the same class as input), `"terra"` (returns `SpatRaster`), or `"raster"` (returns `RasterLayer`).
+#' @param covariate_rasters A named list of raster covariates (`SpatRaster` or `RasterLayer`),
+#' where names match the occupancy covariates used in the model. The list must
+#' include all covariates used in the model, excluding the intercept.
+#' @param return_class Character. Specifies the class of raster returned.
+#' Options are `"same"` (default, returns the same class as input),
+#' `"terra"` (returns `SpatRaster`), or `"raster"` (returns `RasterLayer`).
 #' @param plot_map Logical. If `TRUE` (default), plots the predicted occupancy map and uncertainty layers.
 #' @param plot_ci Logical. If `TRUE`, plots confidence interval bounds on the occupancy scale.
 #' @param ci_level Numeric. Confidence level for intervals (default is `0.95` for 95% CI).
@@ -20,11 +27,17 @@
 #' }
 #' All returned raster layers match the format specified by `return_class`.
 #'
-#' @details The function uses model coefficients and their variance-covariance matrix to generate occupancy predictions across a spatial surface defined by the input covariate rasters. The intercept term is handled internally by generating a constant raster. Variance propagation is performed via the delta method.
+#' @details This function supports main effects and interaction terms of the
+#' form `var1:var2`. The function uses model coefficients and their
+#' variance-covariance matrix to generate occupancy predictions across a spatial
+#' surface defined by the input covariate rasters. The intercept term is handled
+#' internally by generating a constant raster. Variance propagation is performed
+#' via the delta method.
 #'
-#' If `plot_map = TRUE`, the function creates a `ggplot2`-based map visualising the predicted occupancy, standard error, and optionally, the confidence interval bounds. Plots are saved using `ggsave()` if `save_plot = TRUE`.
-#'
-#' A progress bar is shown during uncertainty calculation if the `pbapply` package is installed.
+#' Internally, the function computes the linear predictor on the logit scale,
+#' applies the inverse logit to obtain occupancy probabilities, and uses the
+#' delta method to estimate the standard error. Confidence intervals are
+#' computed using the normal approximation if `plot_ci = TRUE`.
 #'
 #' @importFrom terra rast app values global
 #' @importFrom raster raster cellStats
@@ -37,7 +50,7 @@
 #' @examples
 #' \dontrun{
 #' library(unmarked)
-#' library(terra)
+#' library(terra) # also supports library(raster)
 #'
 #' # Fit a simple model (example assumes you have data in unmarkedFrame)
 #' umf <- unmarkedFrameOccu(y = matrix(sample(0:1, 100, TRUE), ncol = 5),
@@ -56,8 +69,7 @@
 #' result <- occupancy_map(model = mod, covariate_rasters = covariate_rasters)
 #' }
 
-
-occupancy_map <- function (
+occupancy_map <- function(
     model,
     covariate_rasters,
     return_class = c("same", "terra", "raster"),
@@ -67,7 +79,7 @@ occupancy_map <- function (
     save_plot = FALSE,
     plot_filename = "occupancy_map",
     plot_format = "png"
-  ) {
+) {
 
   return_class <- match.arg(return_class)
 
@@ -79,35 +91,52 @@ occupancy_map <- function (
     stop("`covariate_rasters` must be a named list of rasters with names matching model covariates.")
   }
 
-  # Extract coefficients and VCV matrix
+  # Extract coefficients and covariance matrix
   beta <- unmarked::coef(model)
   vcov_mat <- unmarked::vcov(model)
 
+  # Get occupancy covariates (remove 'psi(...)' wrapper)
   psi_coefs <- beta[grep("^psi\\(", names(beta))]
   model_covariate_names <- gsub("^psi\\((.*)\\)$", "\\1", names(psi_coefs))
   names(psi_coefs) <- model_covariate_names
 
-  # Check covariate raster names match
-  # Ignore intercept ("Int") when checking for covariate rasters
-  missing_covs <- setdiff(setdiff(model_covariate_names, "Int"), names(covariate_rasters))
+  # DYNAMICALLY HANDLE INTERACTION TERMS
+  for (cov_name in model_covariate_names) {
+    if (cov_name == "Int") next
+    if (!cov_name %in% names(covariate_rasters)) {
+      if (grepl(":", cov_name)) {
+        parts <- unlist(strsplit(cov_name, ":"))
+        if (all(parts %in% names(covariate_rasters))) {
+          r1 <- covariate_rasters[[parts[1]]]
+          r2 <- covariate_rasters[[parts[2]]]
+          if (inherits(r1, "Raster")) r1 <- terra::rast(r1)
+          if (inherits(r2, "Raster")) r2 <- terra::rast(r2)
+          covariate_rasters[[cov_name]] <- r1 * r2
+        } else {
+          stop("Missing raster(s) for interaction term: ", cov_name,
+               ". Components missing: ", paste(setdiff(parts, names(covariate_rasters)), collapse = ", "))
+        }
+      }
+    }
+  }
 
+  # Check for any still-missing covariates
+  missing_covs <- setdiff(setdiff(model_covariate_names, "Int"), names(covariate_rasters))
   if (length(missing_covs) > 0) {
-    stop("Missing raster(s) for the following model covariates: ",
-         paste(missing_covs, collapse = ", "))
+    stop("Missing raster(s) for the following model covariates: ", paste(missing_covs, collapse = ", "))
   } else {
-    message("Raster list names match model covariates: ",
-            paste(model_covariate_names, collapse = ", "))
+    message("Raster list names match model covariates: ", paste(model_covariate_names, collapse = ", "))
   }
 
   coef_names <- names(psi_coefs)
   beta_vec <- psi_coefs
 
-  # Extract relevant vcv matrix
+  # Extract vcv matrix
   beta_idx <- grep("^psi\\(", rownames(vcov_mat))
   V_sub <- vcov_mat[beta_idx, beta_idx]
   rownames(V_sub) <- colnames(V_sub) <- model_covariate_names
 
-  # Create raster stack of covariates (supports both terra and raster)
+  # BUILD STACKED RASTER FOR ALL COVARIATES (including interaction) - supports both terra and raster
   X_stack <- terra::rast(lapply(coef_names, function(cov) {
     if (cov == "Int") {
       # Intercept: create constant raster (just dummy for plotting convenience)
@@ -123,14 +152,13 @@ occupancy_map <- function (
       return(rast)
     }
   }))
-
   names(X_stack) <- coef_names
 
-  # Check raster consistency
+  # CHECK FOR NA-ONLY RASTERS (checks raster consistency)
   for (cov in setdiff(coef_names, "Int")) {
     r <- covariate_rasters[[cov]]
     if (inherits(r, "SpatRaster")) {
-      if (terra::global(r, fun = function(x) sum(!is.na(x)))[1, 1] == 0) {
+      if (terra::global(r, fun = function(x) sum(!is.na(x)))[1,1] == 0) {
         stop(sprintf("Raster for '%s' has no non-NA values.", cov))
       }
     } else {
@@ -140,21 +168,19 @@ occupancy_map <- function (
     }
   }
 
-  # Compute logit prediction
+  # COMPUTE LINEAR PREDICTION (logit-scale)
   logitPsi <- terra::app(X_stack, fun = function(x_row) sum(x_row * beta_vec))
-
   message("Preparing your map...")
 
+  # COMPUTE VARIANCE OF LINEAR PREDICTION
+  vals <- terra::values(X_stack)
   if (requireNamespace("pbapply", quietly = TRUE)) {
-    vals <- terra::values(X_stack)
-    pbapply <- getNamespace("pbapply")
     var_vals <- pbapply::pbapply(vals, 1, function(x) {
       x_mat <- matrix(x, ncol = 1)
       as.numeric(t(x_mat) %*% V_sub %*% x_mat)
     })
   } else {
     warning("Install 'pbapply' package to see progress bar.")
-    vals <- terra::values(X_stack)
     var_vals <- apply(vals, 1, function(x) {
       x_mat <- matrix(x, ncol = 1)
       as.numeric(t(x_mat) %*% V_sub %*% x_mat)
@@ -165,19 +191,20 @@ occupancy_map <- function (
   var_logitPsi <- logitPsi
   terra::values(var_logitPsi) <- var_vals
 
-  # Compute mean and SE on probability scale
+  # BACK-TRANSFORM TO PROBABILITY SCALE
   psi_mean <- 1 / (1 + exp(-logitPsi))
   psi_se <- (exp(-logitPsi) / (1 + exp(-logitPsi))^2) * sqrt(var_logitPsi)
 
+  # COMPUTE CONFIDENCE INTERVALS IF REQUESTED
   if (plot_ci) {
-    z_val <- qnorm(1 - (1 - ci_level) / 2)
+    z_val <- qnorm(1 - (1 - ci_level)/2)
     lower_logit <- logitPsi - z_val * sqrt(var_logitPsi)
     upper_logit <- logitPsi + z_val * sqrt(var_logitPsi)
     psi_lower <- 1 / (1 + exp(-lower_logit))
     psi_upper <- 1 / (1 + exp(-upper_logit))
   }
 
-  # Convert raster class if needed
+  # OUTPUT FORMAT CONTROL (convert raster if needed)
   convert_rast <- function(r) {
     if (return_class == "raster" && inherits(r, "SpatRaster")) {
       raster::raster(r)
@@ -202,7 +229,6 @@ occupancy_map <- function (
     as.data.frame(r, xy = TRUE, na.rm = TRUE)
   }
 
-  # Do the plot
   if (plot_map) {
     df_mean <- safe_as_df(psi_mean)
     names(df_mean)[3] <- "value"
@@ -228,16 +254,20 @@ occupancy_map <- function (
 
     # Reorder facet labels
     plot_df$type <- factor(plot_df$type, levels = c(
-      "Predicted occupancy (mean)", "Standard error",
+      "Predicted occupancy (mean)",
+      "Standard error",
       paste0(ci_level * 100, "% CI - lower"),
       paste0(ci_level * 100, "% CI - upper")
     ))
 
+    # MAP PLOTTING
     p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = y, fill = value)) +
       ggplot2::geom_raster() +
       ggplot2::scale_fill_viridis_c(
-        name = "Occupancy\nprobability", option = "viridis",
-        na.value = "transparent", limits = c(0, 1)
+        name = "Occupancy\nprobability",
+        option = "viridis",
+        na.value = "transparent",
+        limits = c(0, 1)
       ) +
       ggplot2::coord_equal() +
       ggplot2::theme_minimal() +
@@ -250,12 +280,16 @@ occupancy_map <- function (
 
     print(p)
 
-    # Save if requested
+    # Save plot if requested
     if (save_plot) {
       ggplot2::ggsave(
         filename = paste0(plot_filename, ".", tolower(plot_format)),
-        plot = p, width = 10, height = if (plot_ci) 8 else 5,
-        dpi = 300, bg = "white", device = plot_format
+        plot = p,
+        width = 10,
+        height = if (plot_ci) 8 else 5,
+        dpi = 300,
+        bg = "white",
+        device = plot_format
       )
     }
   }
