@@ -3,6 +3,7 @@
 export(auc_modavg_plot)
 export(auc_plot)
 export(modavg_occupancy_map)
+export(modavg_occupancy_map2)
 export(occupancy_map)
 export(plot_detection)
 export(plot_modavg_response)
