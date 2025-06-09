@@ -46,7 +46,10 @@ plot_detection <- function(model, covariate, fixed_vals = NULL, xlab = NULL) {
       }
     }
 
-    pred <- predict(model, type = "det", newdata = newdata, appendData = TRUE)
+    # Remove row names to avoid warning in predict
+    rownames(newdata) <- NULL
+
+    pred <- unmarked::predict(model, type = "det", newdata = newdata, appendData = TRUE)
     pred_df <- as.data.frame(pred)
     cov_sym <- rlang::sym(covariate)
 
@@ -55,8 +58,8 @@ plot_detection <- function(model, covariate, fixed_vals = NULL, xlab = NULL) {
     cov_range <- range(obs_covs[[covariate]], na.rm = TRUE)
     pred_vals <- seq(cov_range[1], cov_range[2], by = 0.1)
 
-    n_sites <- model@data@numSites
-    n_occasions <- model@data@numPrimary
+    n_sites <- nrow(model@data@y)
+    n_occasions <- ncol(model@data@y)
     total_obs <- n_sites * n_occasions
 
     obs_df <- data.frame(matrix(NA, nrow = total_obs, ncol = 0))
@@ -72,13 +75,18 @@ plot_detection <- function(model, covariate, fixed_vals = NULL, xlab = NULL) {
       }
     }
 
+    # Remove row names to avoid warning in predict
+    rownames(obs_df) <- NULL
+
     # Create dummy site covs
     site_df <- as.data.frame(site_covs[1, , drop = FALSE])
     for (col in names(site_df)) site_df[[col]] <- 0
     site_df <- site_df[rep(1, n_sites), ]
+    rownames(site_df) <- NULL
 
     # Create dummy response (not used in prediction)
     y_dummy <- matrix(1, nrow = n_sites, ncol = n_occasions)
+    rownames(y_dummy) <- NULL  # Though this is a matrix, just to be consistent
 
     umf_pred <- unmarked::unmarkedFrameOccu(
       y = y_dummy,
@@ -86,7 +94,12 @@ plot_detection <- function(model, covariate, fixed_vals = NULL, xlab = NULL) {
       obsCovs = obs_df
     )
 
-    pred <- predict(model, type = "det", newdata = umf_pred, appendData = TRUE)
+    # Remove row names from umf_pred components
+    rownames(umf_pred@y) <- NULL
+    rownames(umf_pred@siteCovs) <- NULL
+    rownames(umf_pred@obsCovs) <- NULL
+
+    pred <- unmarked::predict(model, type = "det", newdata = umf_pred, appendData = TRUE)
     pred_df <- as.data.frame(pred)
     pred_df[[covariate]] <- obs_df[[covariate]]
     cov_sym <- rlang::sym(covariate)
@@ -122,4 +135,3 @@ plot_detection <- function(model, covariate, fixed_vals = NULL, xlab = NULL) {
 
   return(p)
 }
-
