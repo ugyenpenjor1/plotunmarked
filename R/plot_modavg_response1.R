@@ -84,6 +84,7 @@ plot_modavg_response1 <- function(
   # Extract the fitted models from the full model list by matching model names
   model_list_fits <- full_model_list@fits
   models_to_use_fits <- model_list_fits[model_names_sel]
+
   # Create a new unmarkedFitList object for selected models
   models_to_use <- methods::new("unmarkedFitList", fits = models_to_use_fits)
 
