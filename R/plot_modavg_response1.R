@@ -240,3 +240,4 @@ plot_modavg_response1 <- function(
   # Return ggplot object
   return(p)
 }
+
