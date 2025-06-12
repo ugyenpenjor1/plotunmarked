@@ -63,7 +63,7 @@ plot_modavg_response1(
   full_model_list = mod_ls,
   covariate = "cov1",
   fixed_vals = list(cov2 = 0, cov3 = 0),
-  response_type = "state"
+  response_type = "state" # "det" for detection probability
 )
 }
 
