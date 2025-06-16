@@ -321,12 +321,13 @@ plot_detection2 <- function(
           color = NA
         )
       ) +
-        ggplot2::geom_point(size = 3.5) +
         ggplot2::geom_errorbar(
           ggplot2::aes(ymin = lower, ymax = upper),
           width = 0,
-          linewidth = 0.8,
+          linewidth = 1.2,
+          colour = "steelblue"
         ) +
+        ggplot2::geom_point(size = 4.5, colour = "maroon") +
         ggplot2::geom_line(linewidth = 1.2) +
         ggplot2::theme_bw() +
         ggplot2::ylim(0, 1) +
