@@ -67,31 +67,43 @@ plot_occupancy_interaction <- function(
     xlab = NULL,
     nonInt_cov = list()
 ) {
-  # Extract site-level covariates
+
+  # Extract site-level covariates from the `model`
   site_covs <- model@data@siteCovs
 
-  # Validate covariate names
+  # Validate covariate names in `cov1` & `cov2`
   if (!(cov1 %in% names(site_covs)) | !(cov2 %in% names(site_covs))) {
     stop("Both covariates must be present in model.")
+  }
+
+  # Check both covariates are numeric
+  if (!is.numeric(site_covs[[cov1]]) || !is.numeric(site_covs[[cov2]])) {
+    stop(
+      "This plot is designed for interactions between two *continuous numeric* covariates.
+      Please ensure both 'cov1' and 'cov2' are numeric."
+    )
   }
 
   # Get covariate ranges
   cov1_range <- range(site_covs[[cov1]], na.rm = TRUE)
   cov2_range <- range(site_covs[[cov2]], na.rm = TRUE)
 
-  # Create prediction grid
+  # Build grid of cov1 and cov2 values
+  # Create prediction grid, allowing users to specificy `grid_length`
   grid <- expand.grid(
     cov1_vals = seq(cov1_range[1], cov1_range[2], length.out = grid_length),
     cov2_vals = seq(cov2_range[1], cov2_range[2], length.out = grid_length)
   )
+
   names(grid) <- c(cov1, cov2)
 
   # Initialise prediction column
   grid$psi <- NA_real_
   n_rows <- nrow(grid)
 
-  # Chunking
+  # Chunking (define `chunk_size`)
   chunks <- split(grid, ceiling(seq_len(n_rows) / chunk_size))
+
   pb <- progress::progress_bar$new(
     format = "Predicting [:bar] :percent ETA: :eta",
     total = length(chunks), clear = FALSE, width = 60
@@ -103,20 +115,22 @@ plot_occupancy_interaction <- function(
   for (i in seq_along(chunks)) {
     chunk_data <- chunks[[i]]
 
-    # Fill in missing covariates
+    # Fill in other covariates with 0 (if not cov1, cov2, or user-defined)
     missing_covs <- setdiff(all_covs, names(chunk_data))
+
     for (var in missing_covs) {
       if (var %in% names(nonInt_cov)) {
+        # Use user-specified override
         chunk_data[[var]] <- nonInt_cov[[var]]
       } else {
-        # fallback to median value from training data
-        chunk_data[[var]] <- median(site_covs[[var]], na.rm = TRUE)
+        # Fix to 0, assuming standardised covariates
+        chunk_data[[var]] <- 0
       }
     }
 
-    # Ensure column order matches the model
     chunk_data <- chunk_data[all_covs]
 
+    # Predict occupancy (state)
     preds <- unmarked::predict(
       model,
       type = "state",
@@ -128,33 +142,27 @@ plot_occupancy_interaction <- function(
     pb$tick()
   }
 
-  # Set up color palette
+  # Set up colour `palette`
   col_palette <- if (is.null(palette)) {
     hcl.colors(256, "cividis")
   } else {
     hcl.colors(256, palette)
   }
 
+  # Allow user to rename x-axis label (`xlab`)
   x_label <- if (is.null(xlab)) cov1 else xlab
 
+  # Make a plot
   p <- ggplot2::ggplot(
     grid,
     ggplot2::aes(
       x = .data[[cov1]],
-      y = psi,
-      group = .data[[cov2]],
-      colour = .data[[cov2]]
-    )
+      y = psi, group = .data[[cov2]],
+      colour = .data[[cov2]])
   ) +
     ggplot2::geom_line(linewidth = 0.5, alpha = 0.8, na.rm = TRUE) +
-    ggplot2::scale_colour_gradientn(
-      colours = col_palette,
-      name = cov2
-    ) +
-    ggplot2::labs(
-      x = x_label,
-      y = "Probability of occupancy"
-    ) +
+    ggplot2::scale_colour_gradientn(colours = col_palette, name = cov2) +
+    ggplot2::labs(x = x_label, y = "Probability of occupancy") +
     ggplot2::theme_bw() +
     ggplot2::theme(
       axis.text = ggplot2::element_text(size = 15),
