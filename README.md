@@ -111,7 +111,7 @@ if (requireNamespace("unmarked", quietly = TRUE)) {
 <img src="man/figures/cov_plot.png" width="60%" />
 </p>
 
-A similar plot can be made for model-averaged coefficient using the
+A similar plot can be made for the model-averaged coefficient using the
 `plot_modavg_response()` function.
 
 ``` r
@@ -192,7 +192,7 @@ psi_map_ma <- modavg_occupancy_map(
   plot_ci = TRUE,                          # plot lower and upper prediction maps
   save_plot = TRUE,                        # saves the plot
   plot_filename = "plot_name",             # plot name
-  plot_format = "png"                      # plot format (also avaiable as "jpeg" and "tif"
+  plot_format = "png"                      # plot format (also available as "jpeg" and "tif"
 )
 ```
 
@@ -223,9 +223,9 @@ auc_modavg_plot(
 This work is in progress. If you have any questions or discover bugs,
 please report to <ugyenpenjor.bt@gmail.com>.
 
-To cite package `plotunmarked` in publications use:
+To cite the package `plotunmarked` in publications, use:
 
-Penjor, Ugyen (2025). *plotunmarked: Utility Tools for Visualising
+Penjor, U. (2025). *plotunmarked: Utility Tools for Visualising
 `unmarked` Package Models*. R package version 0.1.0. Available at:
 <https://github.com/ugyenpenjor1/plotunmarked>
 
