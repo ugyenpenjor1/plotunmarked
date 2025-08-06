@@ -40,7 +40,7 @@ plotunmarked
 
 The goal of <strong>plotunmarked</strong> is to provide convenient
 plotting functions for visualising predictions from unmarked models,
-particularly occupancy estimates – a quick and dirty approach!
+particularly occupancy estimates – a quick and dirty approach! Currently, functions are available for static occupancy models. Future updates will incorporate for dynamic and multispecies interaction models.
 
 </td>
 
