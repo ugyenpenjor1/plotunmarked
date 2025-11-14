@@ -74,7 +74,7 @@ particularly occupancy estimates – a quick and dirty approach! Currently, func
 
 ## Installation
 
-You can install the development version of plotunmarked package from
+You can install the development version of the `plotunmarked` package from
 [GitHub](https://github.com/) with:
 
 ``` r
