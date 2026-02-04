@@ -129,11 +129,11 @@ plot_modavg_response(
 
 ``` r
 library(terra)
-riv <- rast("C/yourdirectory/dist_river.tif")
+riv <- rast("yourdirectory/dist_river.tif")
 
 # Or
 library(raster)
-riv <- raster("C/yourdirectory/dist_river.tif")
+riv <- raster("yourdirectory/dist_river.tif")
 ```
 
 #### Standardise raster using mean and SD of covariates
